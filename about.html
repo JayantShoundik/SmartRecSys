@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartRecSys — About</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav class="topnav">
+    <a href="welcome.html" class="nav-logo">SmartRecSys</a>
+    <ul class="nav-links">
+      <li><a href="welcome.html"   class="nav-link" data-page="welcome">Welcome</a></li>
+      <li><a href="home.html"      class="nav-link" data-page="home">Home</a></li>
+      <li><a href="about.html"     class="nav-link" data-page="about">About</a></li>
+      <li><a href="docs.html"      class="nav-link" data-page="docs">Docs</a></li>
+      <li><a href="dashboard.html" class="nav-link" data-page="dashboard">Recommender</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+
+    <!-- ── About the platform ── -->
+    <section class="about-section">
+      <div class="about-header">
+        <h1>About SmartRecSys</h1>
+        <p class="subtitle">An academic course recommendation system built as a final-year major project.</p>
+      </div>
+
+      <div class="about-body">
+        <div class="about-block">
+          <h2>Purpose</h2>
+          <p>
+            Students in technical degree programmes often face a large catalogue of elective courses
+            with little guidance on which ones align with their existing knowledge, current semester
+            workload, or career direction. SmartRecSys addresses this by collecting a lightweight
+            academic profile and running it through a trained machine learning model to produce a
+            ranked, explained list of relevant courses.
+          </p>
+        </div>
+
+        <div class="about-block">
+          <h2>Problem being solved</h2>
+          <p>
+            Manual course selection is time-consuming and often based on word-of-mouth rather than
+            data. Students may miss courses that would significantly strengthen their profile, or
+            enrol in courses that duplicate knowledge they already have. SmartRecSys makes the
+            selection process faster, more transparent, and better aligned with individual goals.
+          </p>
+        </div>
+
+        <div class="about-block">
+          <h2>How the AI works</h2>
+          <p>
+            The recommendation engine takes your department, semester, completed courses, preferred
+            domains, and difficulty preference as input. It computes a relevance score for each
+            course in the catalogue by combining domain alignment, difficulty fit, and prerequisite
+            coverage into a single weighted value. Courses are then ranked by this score and
+            returned with a plain-language reason for each recommendation.
+          </p>
+        </div>
+
+        <div class="about-block">
+          <h2>Intended users</h2>
+          <p>
+            Undergraduate and postgraduate students in computer science, information technology,
+            software engineering, and related disciplines who want data-driven guidance when
+            choosing elective or specialisation courses.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Key features ── -->
+    <section class="about-features-section">
+      <h2 class="section-title">Key Features</h2>
+      <div class="about-feat-grid">
+
+        <div class="about-feat-card">
+          <div class="feat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" stroke="var(--indigo)" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Personalised Recommendations</h3>
+          <p>Results are specific to your profile — not a generic top-10 list.</p>
+        </div>
+
+        <div class="about-feat-card">
+          <div class="feat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="var(--indigo)" stroke-width="1.7"/>
+              <path d="M9 12l2 2 4-4" stroke="var(--indigo)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Machine Learning Model</h3>
+          <p>Scores are computed by a trained model, not hand-written rules.</p>
+        </div>
+
+        <div class="about-feat-card">
+          <div class="feat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="3" stroke="var(--indigo)" stroke-width="1.7"/>
+              <path d="M8 12h8M8 8h5M8 16h6" stroke="var(--indigo)" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Easy Navigation</h3>
+          <p>A single form, a single results page — no complex multi-step flows.</p>
+        </div>
+
+        <div class="about-feat-card">
+          <div class="feat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="var(--indigo)" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Smart Academic Planning</h3>
+          <p>Understand how each course fits your degree path before you register.</p>
+        </div>
+
+        <div class="about-feat-card">
+          <div class="feat-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="5" y="2" width="14" height="20" rx="2" stroke="var(--indigo)" stroke-width="1.7"/>
+              <path d="M9 7h6M9 11h6M9 15h4" stroke="var(--indigo)" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Responsive Design</h3>
+          <p>Works cleanly on desktop, tablet, and mobile without a separate mobile build.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Team ── -->
+    <section class="team-section">
+      <h2 class="section-title">Our Team</h2>
+      <p class="team-intro">This project was developed as a final-year major project by a four-member team.</p>
+      <div class="team-grid">
+
+        <div class="team-card">
+          <!-- To update: replace assets/team/member1.png with the actual photo -->
+          <div class="team-avatar">
+            <img src="assets/team/member1.png" alt="Team Leader"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+            <span class="avatar-fallback" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" stroke="var(--indigo)" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+          <h3>Team Leader</h3>
+          <span class="team-role">Project Lead </span>
+        </div>
+
+        <div class="team-card">
+          <!-- To update: replace assets/team/member2.png with the actual photo -->
+          <div class="team-avatar">
+            <img src="assets/team/member2.png" alt="ML Engineer"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+            <span class="avatar-fallback" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" stroke="var(--indigo)" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+          <h3>ML Engineer</h3>
+          <span class="team-role">Machine Learning Model &amp; Data Pipeline</span>
+        </div>
+
+        <div class="team-card">
+          <!-- To update: replace assets/team/member3.png with the actual photo -->
+          <div class="team-avatar">
+            <img src="assets/team/member3.png" alt="Web Developer"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+            <span class="avatar-fallback" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" stroke="var(--indigo)" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+          <h3>Web Developer</h3>
+          <span class="team-role">Frontend Developer &amp; Integration</span>
+        </div>
+
+        <div class="team-card">
+          <!-- To update: replace assets/team/member4.png with the actual photo -->
+          <div class="team-avatar">
+            <img src="assets/team/member4.png" alt="Researcher"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+            <span class="avatar-fallback" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" stroke="var(--indigo)" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+          <h3>Researcher</h3>
+          <span class="team-role">Dataset Curation &amp; Model Evaluation</span>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-logo">SmartRecSys</span>
+      <span class="footer-copy">Final-Year Major Project &mdash; AI-Powered Course Recommendation System</span>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="welcome.html">Welcome</a>
+        <a href="home.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="docs.html">Docs</a>
+        <a href="dashboard.html">Recommender</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="nav.js"></script>
+</body>
+</html>

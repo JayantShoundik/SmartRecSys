@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartRecSys — Student Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav class="topnav">
+    <a href="welcome.html" class="nav-logo">SmartRecSys</a>
+    <ul class="nav-links">
+      <li><a href="welcome.html"   class="nav-link" data-page="welcome">Welcome</a></li>
+      <li><a href="home.html"      class="nav-link" data-page="home">Home</a></li>
+      <li><a href="about.html"     class="nav-link" data-page="about">About</a></li>
+      <li><a href="docs.html"      class="nav-link" data-page="docs">Docs</a></li>
+      <li><a href="dashboard.html" class="nav-link" data-page="dashboard">Recommender</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="form-page-header">
+      <h1>Your Academic Profile</h1>
+      <p class="subtitle">Fill in your details so we can generate recommendations that actually match your situation.</p>
+    </div>
+
+    <form id="profileForm" class="profile-form" novalidate>
+
+      <!-- ── Personal Information ── -->
+      <fieldset class="form-section">
+        <legend>Personal Information</legend>
+        <div class="form-grid">
+
+          <div class="field">
+            <label for="studentName">Student Name <span class="req">*</span></label>
+            <input type="text" id="studentName" name="studentName" placeholder="e.g. Aisha Raza" autocomplete="name" />
+            <span class="field-error" id="err-studentName"></span>
+          </div>
+
+          <div class="field">
+            <label for="department">Department <span class="req">*</span></label>
+            <select id="department" name="department">
+              <option value="">Select department</option>
+              <option>Computer Science</option>
+              <option>Information Technology</option>
+              <option>Software Engineering</option>
+              <option>Electrical Engineering</option>
+              <option>Data Science</option>
+              <option>Other</option>
+            </select>
+            <span class="field-error" id="err-department"></span>
+          </div>
+
+          <div class="field">
+            <label for="degree">Degree Program <span class="req">*</span></label>
+            <select id="degree" name="degree">
+              <option value="">Select degree</option>
+              <option>BS (4-Year)</option>
+              <option>BE (4-Year)</option>
+              <option>MS</option>
+              <option>MCS</option>
+              <option>PhD</option>
+            </select>
+            <span class="field-error" id="err-degree"></span>
+          </div>
+
+          <div class="field">
+            <label for="batch">Batch / Year <span class="req">*</span></label>
+            <select id="batch" name="batch">
+              <option value="">Select year</option>
+              <option>1st Year</option>
+              <option>2nd Year</option>
+              <option>3rd Year</option>
+              <option>4th Year</option>
+            </select>
+            <span class="field-error" id="err-batch"></span>
+          </div>
+
+          <div class="field">
+            <label for="semester">Current Semester <span class="req">*</span></label>
+            <select id="semester" name="semester">
+              <option value="">Select semester</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option>
+              <option>5</option><option>6</option><option>7</option><option>8</option>
+            </select>
+            <span class="field-error" id="err-semester"></span>
+          </div>
+
+          <div class="field">
+            <label for="cgpa">CGPA <span class="optional">(optional)</span></label>
+            <input type="number" id="cgpa" name="cgpa" placeholder="e.g. 3.5" min="0" max="4" step="0.01" />
+            <span class="field-error" id="err-cgpa"></span>
+          </div>
+
+        </div>
+      </fieldset>
+
+      <!-- ── Academic Information ── -->
+      <fieldset class="form-section">
+        <legend>Academic Information</legend>
+
+        <div class="field">
+          <label for="completedCourses">Previously Completed Courses <span class="optional">(optional)</span></label>
+          <textarea id="completedCourses" name="completedCourses" rows="3"
+            placeholder="e.g. Introduction to Programming, Data Structures, Database Systems"></textarea>
+          <span class="field-hint">Separate course names with commas.</span>
+        </div>
+
+        <div class="field">
+          <label for="currentCourses">Current Semester Courses <span class="optional">(optional)</span></label>
+          <textarea id="currentCourses" name="currentCourses" rows="2"
+            placeholder="e.g. Operating Systems, Computer Networks"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Preferred Domain / Interest <span class="req">*</span></label>
+          <div class="checkboxes" id="domainInterestGroup">
+            <label class="chip"><input type="checkbox" name="domainInterest" value="AI" /><span>AI</span></label>
+            <label class="chip"><input type="checkbox" name="domainInterest" value="Data Science" /><span>Data Science</span></label>
+            <label class="chip"><input type="checkbox" name="domainInterest" value="Cybersecurity" /><span>Cybersecurity</span></label>
+            <label class="chip"><input type="checkbox" name="domainInterest" value="Web Development" /><span>Web Development</span></label>
+            <label class="chip"><input type="checkbox" name="domainInterest" value="Cloud Computing" /><span>Cloud Computing</span></label>
+            <label class="chip"><input type="checkbox" name="domainInterest" value="Networking" /><span>Networking</span></label>
+            <label class="chip"><input type="checkbox" name="domainInterest" value="Software Engineering" /><span>Software Engineering</span></label>
+            <label class="chip"><input type="checkbox" name="domainInterest" value="Others" /><span>Others</span></label>
+          </div>
+          <span class="field-error" id="err-domainInterest"></span>
+        </div>
+
+      </fieldset>
+
+      <!-- ── Learning Preference ── -->
+      <fieldset class="form-section">
+        <legend>Learning Preference</legend>
+        <div class="field">
+          <label>Difficulty Level <span class="req">*</span></label>
+          <div class="radio-group" id="levelGroup">
+            <label class="radio-chip">
+              <input type="radio" name="level" value="Beginner" />
+              <span>
+                <strong>Beginner</strong>
+                <small>New to the domain, foundational topics</small>
+              </span>
+            </label>
+            <label class="radio-chip">
+              <input type="radio" name="level" value="Intermediate" />
+              <span>
+                <strong>Intermediate</strong>
+                <small>Some background, ready to go deeper</small>
+              </span>
+            </label>
+            <label class="radio-chip">
+              <input type="radio" name="level" value="Advanced" />
+              <span>
+                <strong>Advanced</strong>
+                <small>Strong foundation, looking for specialisation</small>
+              </span>
+            </label>
+          </div>
+          <span class="field-error" id="err-level"></span>
+        </div>
+      </fieldset>
+
+      <!-- ── Career Goal ── -->
+      <fieldset class="form-section">
+        <legend>Career Goal <span class="optional">(optional)</span></legend>
+        <div class="field">
+          <label for="careerGoal">What are you aiming for after graduation?</label>
+          <select id="careerGoal" name="careerGoal">
+            <option value="">Select a goal (optional)</option>
+            <option>Software Engineer</option>
+            <option>ML Engineer</option>
+            <option>Data Analyst</option>
+            <option>Cybersecurity Analyst</option>
+            <option>Cloud Architect</option>
+            <option>Research</option>
+            <option>Higher Studies</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <div class="form-actions">
+        <button type="submit" id="submitBtn">Get Recommendations →</button>
+        <button type="button" id="resetBtn" class="btn-secondary">Reset</button>
+      </div>
+
+    </form>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-logo">SmartRecSys</span>
+      <span class="footer-copy">Final-Year Major Project &mdash; AI-Powered Course Recommendation System</span>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="welcome.html">Welcome</a>
+        <a href="home.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="docs.html">Docs</a>
+        <a href="dashboard.html">Recommender</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="nav.js"></script>
+  <script>
+    // ── Restore saved form data from sessionStorage ──────────────────────────
+    // We use sessionStorage only to preserve form state within the same tab
+    // session — it is cleared when the tab closes and never used for auth.
+    const FIELDS = ['studentName','department','degree','batch','semester','cgpa',
+                    'completedCourses','currentCourses','careerGoal'];
+
+    FIELDS.forEach(id => {
+      const el  = document.getElementById(id);
+      const val = sessionStorage.getItem('srs_' + id);
+      if (el && val) el.value = val;
+    });
+
+    // Restore checkboxes
+    const savedDomains = JSON.parse(sessionStorage.getItem('srs_domainInterest') || '[]');
+    document.querySelectorAll('[name="domainInterest"]').forEach(cb => {
+      if (savedDomains.includes(cb.value)) cb.checked = true;
+    });
+
+    // Restore radio
+    const savedLevel = sessionStorage.getItem('srs_level');
+    if (savedLevel) {
+      const r = document.querySelector(`[name="level"][value="${savedLevel}"]`);
+      if (r) r.checked = true;
+    }
+
+    // ── Validation helpers ───────────────────────────────────────────────────
+    function showErr(id, msg) {
+      const el = document.getElementById('err-' + id);
+      if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+    }
+    function clearErr(id) { showErr(id, ''); }
+
+    function validateForm() {
+      let valid = true;
+
+      const name = document.getElementById('studentName').value.trim();
+      if (!name) { showErr('studentName', 'Name is required.'); valid = false; }
+      else clearErr('studentName');
+
+      ['department','degree','batch','semester'].forEach(id => {
+        const val = document.getElementById(id).value;
+        if (!val) { showErr(id, 'Please select an option.'); valid = false; }
+        else clearErr(id);
+      });
+
+      const cgpa = document.getElementById('cgpa').value;
+      if (cgpa !== '' && (isNaN(cgpa) || +cgpa < 0 || +cgpa > 4)) {
+        showErr('cgpa', 'CGPA must be between 0 and 4.'); valid = false;
+      } else clearErr('cgpa');
+
+      const domains = [...document.querySelectorAll('[name="domainInterest"]:checked')];
+      if (!domains.length) { showErr('domainInterest', 'Select at least one domain.'); valid = false; }
+      else clearErr('domainInterest');
+
+      const level = document.querySelector('[name="level"]:checked');
+      if (!level) { showErr('level', 'Please select a difficulty level.'); valid = false; }
+      else clearErr('level');
+
+      return valid;
+    }
+
+    // ── Submit ───────────────────────────────────────────────────────────────
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!validateForm()) return;
+
+      // Save to sessionStorage for back-navigation preservation
+      FIELDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) sessionStorage.setItem('srs_' + id, el.value);
+      });
+      const domains = [...document.querySelectorAll('[name="domainInterest"]:checked')].map(c => c.value);
+      sessionStorage.setItem('srs_domainInterest', JSON.stringify(domains));
+      const level = document.querySelector('[name="level"]:checked').value;
+      sessionStorage.setItem('srs_level', level);
+
+      // Build query string
+      const params = new URLSearchParams({
+        name:     document.getElementById('studentName').value.trim(),
+        dept:     document.getElementById('department').value,
+        degree:   document.getElementById('degree').value,
+        batch:    document.getElementById('batch').value,
+        semester: document.getElementById('semester').value,
+        cgpa:     document.getElementById('cgpa').value,
+        domains:  domains.join(','),
+        level:    level,
+        goal:     document.getElementById('careerGoal').value,
+      });
+      window.location.href = 'dashboard.html?' + params.toString();
+    });
+
+    // ── Reset ────────────────────────────────────────────────────────────────
+    document.getElementById('resetBtn').addEventListener('click', function() {
+      document.getElementById('profileForm').reset();
+      sessionStorage.clear();
+      document.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+    });
+
+    // ── Inline validation on blur ────────────────────────────────────────────
+    ['studentName','department','degree','batch','semester'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('blur', () => {
+        if (!el.value.trim()) showErr(id, id === 'studentName' ? 'Name is required.' : 'Please select an option.');
+        else clearErr(id);
+      });
+    });
+  </script>
+</body>
+</html>
