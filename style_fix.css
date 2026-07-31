@@ -1,0 +1,31 @@
+/* ── SmartRecSys Footer & Layout Fixes ─────────────────────────────────────── */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Ensure all page wrappers stretch to push footer to bottom */
+.container,
+.about-container,
+.docs-layout,
+.hero {
+  flex: 1 0 auto;
+}
+
+/* Fix footer sizing and prevent it from shrinking */
+.site-footer {
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive fixes for footer elements */
+@media (max-width: 768px) {
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+}
