@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartRecSys — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav class="topnav">
+    <a href="welcome.html" class="nav-logo">SmartRecSys</a>
+    <ul class="nav-links">
+      <li><a href="welcome.html"   class="nav-link" data-page="welcome">Welcome</a></li>
+      <li><a href="home.html"      class="nav-link" data-page="home">Home</a></li>
+      <li><a href="about.html"     class="nav-link" data-page="about">About</a></li>
+      <li><a href="docs.html"      class="nav-link" data-page="docs">Docs</a></li>
+      <li><a href="dashboard.html" class="nav-link" data-page="dashboard">Recommender</a></li>
+    </ul>
+  </nav>
+
+  <div class="docs-layout">
+
+    <!-- ── Sidebar TOC ── -->
+    <aside class="docs-sidebar">
+      <nav aria-label="Documentation sections">
+        <ul class="docs-toc">
+          <li><a href="#overview">Project Overview</a></li>
+          <li><a href="#objectives">Objectives</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#tech-stack">Technology Stack</a></li>
+          <li><a href="#architecture">System Architecture</a></li>
+          <li><a href="#ml-model">ML Model</a></li>
+          <li><a href="#dataset">Dataset</a></li>
+          <li><a href="#workflow">Recommendation Workflow</a></li>
+          <li><a href="#installation">Installation Guide</a></li>
+          <li><a href="#user-guide">User Guide</a></li>
+          <li><a href="#future">Future Scope</a></li>
+          <li><a href="#references">References</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- ── Main content ── -->
+    <main class="docs-main">
+
+      <div class="docs-hero">
+        <h1>Documentation</h1>
+        <p class="subtitle">SmartRecSys — AI-Powered Course Recommendation System</p>
+      </div>
+
+      <section class="docs-section" id="overview">
+        <h2>Project Overview</h2>
+        <p>
+          SmartRecSys is a web-based academic course recommendation platform developed as a
+          final-year major project. It accepts a student's academic profile as input and returns
+          a ranked list of relevant courses, each accompanied by a match score and a plain-language
+          explanation of why it was recommended.
+        </p>
+        <p>
+          The system is composed of a plain HTML/CSS/JS frontend and a Python-based backend that
+          exposes a REST API. The recommendation logic is implemented as a machine learning model
+          trained on a curated course dataset.
+        </p>
+      </section>
+
+      <section class="docs-section" id="objectives">
+        <h2>Objectives</h2>
+        <ul class="docs-list">
+          <li>Reduce the time students spend manually browsing course catalogues.</li>
+          <li>Provide data-driven, personalised course suggestions based on academic profile.</li>
+          <li>Make the recommendation reasoning transparent through per-course explanations.</li>
+          <li>Demonstrate a complete ML-powered web application as a major project deliverable.</li>
+          <li>Produce a maintainable, documented codebase that can be extended in future work.</li>
+        </ul>
+      </section>
+
+      <section class="docs-section" id="features">
+        <h2>Features</h2>
+        <div class="docs-feature-list">
+          <div class="docs-feat-item">
+            <span class="docs-feat-label">Profile-based input</span>
+            <p>Collects name, department, degree, semester, completed courses, preferred domains, difficulty level, and career goal.</p>
+          </div>
+          <div class="docs-feat-item">
+            <span class="docs-feat-label">ML-powered scoring</span>
+            <p>A trained model computes a relevance score (0.0–1.0) for each course relative to the submitted profile.</p>
+          </div>
+          <div class="docs-feat-item">
+            <span class="docs-feat-label">Ranked results</span>
+            <p>Courses are returned in descending score order with domain and difficulty tags.</p>
+          </div>
+          <div class="docs-feat-item">
+            <span class="docs-feat-label">Explained recommendations</span>
+            <p>Each card includes a short reason explaining the match.</p>
+          </div>
+          <div class="docs-feat-item">
+            <span class="docs-feat-label">Filter &amp; search</span>
+            <p>Results can be filtered by domain and difficulty level without re-querying the backend.</p>
+          </div>
+          <div class="docs-feat-item">
+            <span class="docs-feat-label">Access guard</span>
+            <p>The dashboard is inaccessible without a valid profile submission — direct URL access redirects to the welcome page.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="docs-section" id="tech-stack">
+        <h2>Technology Stack</h2>
+        <table class="docs-table">
+          <thead>
+            <tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Frontend</td><td>HTML5, CSS3, Vanilla JS</td><td>UI, form handling, result rendering</td></tr>
+            <tr><td>Fonts</td><td>Google Fonts (Space Grotesk, Inter, JetBrains Mono)</td><td>Typography</td></tr>
+            <tr><td>Backend</td><td>Python (Flask or FastAPI)</td><td>REST API, request routing</td></tr>
+            <tr><td>ML Framework</td><td>scikit-learn / PyTorch</td><td>Recommendation model</td></tr>
+            <tr><td>Data</td><td>CSV / JSON course dataset</td><td>Training and inference data</td></tr>
+            <tr><td>Deployment</td><td>Local / any WSGI host</td><td>Development and demo</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="docs-section" id="architecture">
+        <h2>System Architecture</h2>
+        <p>The system follows a simple client–server architecture:</p>
+        <div class="arch-diagram">
+          <div class="arch-box">Browser<br/><small>welcome → home → dashboard</small></div>
+          <div class="arch-arrow">POST /recommend →</div>
+          <div class="arch-box">Flask / FastAPI<br/><small>Input validation, routing</small></div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box">ML Model<br/><small>Score computation</small></div>
+        </div>
+        <ul class="docs-list">
+          <li>The browser collects the student profile via <code>home.html</code> and passes it as URL parameters to <code>dashboard.html</code>.</li>
+          <li>The dashboard JS reads those parameters and sends a <code>POST /recommend</code> request to the backend.</li>
+          <li>The backend validates the input, runs it through the ML model, and returns a JSON array of scored courses.</li>
+          <li>The frontend renders the results using the <code>buildCard()</code> function without any page reload.</li>
+        </ul>
+      </section>
+
+      <section class="docs-section" id="ml-model">
+        <h2>Machine Learning Model</h2>
+        <p>
+          The recommendation model is implemented in <code>recommender.py</code> (and optionally
+          <code>dl_recommender_gpu.py</code> for a deep-learning variant). It takes a feature
+          vector derived from the student profile and computes a cosine-similarity or
+          classification-based relevance score for each course in the catalogue.
+        </p>
+        <ul class="docs-list">
+          <li><strong>Input features:</strong> domain preferences (one-hot), difficulty level (ordinal), semester (ordinal), completed course embeddings.</li>
+          <li><strong>Output:</strong> a score in [0, 1] per course, where 1.0 indicates a perfect profile–course match.</li>
+          <li><strong>Training:</strong> supervised on historical enrolment and rating data from the course dataset.</li>
+          <li><strong>Inference:</strong> runs at request time; typical latency is under 200 ms on CPU.</li>
+        </ul>
+      </section>
+
+      <section class="docs-section" id="dataset">
+        <h2>Dataset Information</h2>
+        <p>
+          The course catalogue dataset contains records for courses across six primary domains:
+          Programming, Web Development, Data Science, Machine Learning, Cybersecurity, and
+          Cloud Computing. Each record includes:
+        </p>
+        <ul class="docs-list">
+          <li>Course title and short description</li>
+          <li>Domain and sub-domain tags</li>
+          <li>Difficulty level (Beginner / Intermediate / Advanced)</li>
+          <li>Estimated duration in weeks</li>
+          <li>Skills covered (comma-separated)</li>
+          <li>Prerequisite course identifiers (optional)</li>
+        </ul>
+        <p>The dataset was curated and cleaned by the research team member. It does not contain any personally identifiable student information.</p>
+      </section>
+
+      <section class="docs-section" id="workflow">
+        <h2>Recommendation Workflow</h2>
+        <ol class="docs-list docs-list-ol">
+          <li>Student visits <code>welcome.html</code> and clicks <em>Get Started</em>.</li>
+          <li>Student fills in the academic profile form on <code>home.html</code> and submits.</li>
+          <li>Form data is validated client-side; on success it is encoded as URL query parameters.</li>
+          <li>Browser navigates to <code>dashboard.html?name=...&amp;domains=...&amp;level=...</code>.</li>
+          <li>Dashboard JS reads the parameters, verifies they are present (guard), then sends <code>POST /recommend</code>.</li>
+          <li>Backend returns a JSON array: <code>[{ title, domain, difficulty, score, duration, description, skills, reason }, ...]</code>.</li>
+          <li>Frontend renders the featured top-3 row and the full results grid using <code>buildCard()</code>.</li>
+          <li>Student can filter results by domain or difficulty without a new API call.</li>
+        </ol>
+      </section>
+
+      <section class="docs-section" id="installation">
+        <h2>Installation Guide</h2>
+        <h3>Frontend (no build step required)</h3>
+        <pre class="code-block"><code># Clone the repository
+git clone &lt;repo-url&gt;
+cd "Major Project/frontend"
+
+# Open in browser directly — no server needed for the frontend alone
+open welcome.html   # macOS
+start welcome.html  # Windows</code></pre>
+
+        <h3>Backend</h3>
+        <pre class="code-block"><code># From the project root
+cd backend   # or wherever recommender.py lives
+
+# Create a virtual environment
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the API server
+python app.py   # or: uvicorn app:app --reload  (FastAPI)</code></pre>
+
+        <p>The API will be available at <code>http://localhost:5000</code> by default. Update the URL in <code>app.js</code> if you use a different port.</p>
+      </section>
+
+      <section class="docs-section" id="user-guide">
+        <h2>User Guide</h2>
+        <ol class="docs-list docs-list-ol">
+          <li>Open <code>welcome.html</code> in your browser.</li>
+          <li>Click <strong>Get Started</strong> to go to the profile form.</li>
+          <li>Fill in all required fields (marked with <span style="color:var(--coral)">*</span>).</li>
+          <li>Select at least one domain of interest and a difficulty level.</li>
+          <li>Click <strong>Get Recommendations</strong>.</li>
+          <li>Review the top-3 featured matches at the top of the results page.</li>
+          <li>Use the domain and difficulty filters to narrow down the full list.</li>
+          <li>Read the <em>Why recommended</em> section on each card for context.</li>
+          <li>Click <strong>← Back</strong> or navigate to <em>Home</em> to adjust your profile and re-run.</li>
+        </ol>
+      </section>
+
+      <section class="docs-section" id="future">
+        <h2>Future Scope</h2>
+        <ul class="docs-list">
+          <li>Persistent user accounts with recommendation history.</li>
+          <li>Collaborative filtering using anonymised enrolment data from multiple students.</li>
+          <li>Integration with the university's live course catalogue via an API.</li>
+          <li>Prerequisite chain visualisation — show which courses unlock which.</li>
+          <li>Export recommendations as a PDF study plan.</li>
+          <li>Admin panel for updating the course dataset without redeploying.</li>
+        </ul>
+      </section>
+
+      <section class="docs-section" id="references">
+        <h2>References</h2>
+        <ul class="docs-list docs-ref-list">
+          <li>Ricci, F., Rokach, L., &amp; Shapira, B. (2015). <em>Recommender Systems Handbook</em>. Springer.</li>
+          <li>Koren, Y., Bell, R., &amp; Volinsky, C. (2009). Matrix factorization techniques for recommender systems. <em>IEEE Computer</em>, 42(8), 30–37.</li>
+          <li>Scikit-learn documentation — <a href="https://scikit-learn.org/stable/" target="_blank" rel="noopener">scikit-learn.org</a></li>
+          <li>MDN Web Docs — HTML, CSS, JavaScript reference — <a href="https://developer.mozilla.org" target="_blank" rel="noopener">developer.mozilla.org</a></li>
+          <li>Flask documentation — <a href="https://flask.palletsprojects.com" target="_blank" rel="noopener">flask.palletsprojects.com</a></li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="nav.js"></script>
+  <script>
+    // Highlight active TOC link on scroll
+    const sections = document.querySelectorAll('.docs-section');
+    const tocLinks = document.querySelectorAll('.docs-toc a');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(a => a.classList.remove('toc-active'));
+          const active = document.querySelector(`.docs-toc a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('toc-active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+</body>
+</html>

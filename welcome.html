@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartRecSys — Welcome</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-welcome">
+
+  <nav class="topnav">
+    <a href="welcome.html" class="nav-logo">SmartRecSys</a>
+    <ul class="nav-links">
+      <li><a href="welcome.html"  class="nav-link" data-page="welcome">Welcome</a></li>
+      <li><a href="home.html"     class="nav-link" data-page="home">Home</a></li>
+      <li><a href="about.html"    class="nav-link" data-page="about">About</a></li>
+      <li><a href="docs.html"     class="nav-link" data-page="docs">Docs</a></li>
+      <li><a href="dashboard.html" class="nav-link" data-page="dashboard">Recommender</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="hero-inner">
+      <span class="hero-eyebrow">AI-Powered Academic Tool</span>
+      <h1 class="hero-title">Find courses that<br/>actually fit <em>you</em></h1>
+      <p class="hero-sub">
+        SmartRecSys analyses your academic profile, completed coursework, and learning
+        preferences to surface the courses most relevant to where you want to go — not
+        just what's popular.
+      </p>
+      <a href="home.html" class="btn-hero">Get Started →</a>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <!-- Decorative ring cluster -->
+      <div class="deco-ring r1"></div>
+      <div class="deco-ring r2"></div>
+      <div class="deco-ring r3"></div>
+    </div>
+  </section>
+
+  <!-- ── Feature cards ── -->
+  <section class="section-features">
+    <div class="section-inner">
+      <h2 class="section-title">What SmartRecSys does</h2>
+      <div class="feat-grid">
+
+        <div class="feat-card">
+          <div class="feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z" stroke="var(--indigo)" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Personalised to you</h3>
+          <p>Recommendations are built from your department, semester, completed courses, and stated interests — not a one-size-fits-all list.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke="var(--indigo)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="16 7 22 7 22 13"               stroke="var(--indigo)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Ranked, not just listed</h3>
+          <p>Every result carries a transparent match score so you can see exactly why a course ranked where it did.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="var(--indigo)" stroke-width="1.7"/>
+              <path d="M12 6v6l4 2" stroke="var(--indigo)" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Fast suggestions</h3>
+          <p>Submit your profile once and get a ranked list of relevant courses in seconds — no manual browsing through catalogues.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="3" stroke="var(--indigo)" stroke-width="1.7"/>
+              <path d="M8 12h8M8 8h5M8 16h6" stroke="var(--indigo)" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Domain-aware scoring</h3>
+          <p>The model weighs domain relevance and difficulty alignment together, producing a single calibrated score per course.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="var(--indigo)" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Smart academic planning</h3>
+          <p>Understand which electives complement your existing coursework and align with your career goals before you register.</p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" stroke="var(--indigo)" stroke-width="1.7"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" stroke="var(--indigo)" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>Easy-to-use interface</h3>
+          <p>A clean, accessible form collects your profile in under two minutes. No account creation or login required.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Why this platform ── -->
+  <section class="section-why">
+    <div class="section-inner why-inner">
+      <div class="why-text">
+        <h2 class="section-title">Why use SmartRecSys?</h2>
+        <ul class="why-list">
+          <li>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="var(--teal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><strong>Saves time</strong> — no more manually cross-referencing syllabi to find relevant electives.</span>
+          </li>
+          <li>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="var(--teal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><strong>Better academic planning</strong> — see how each course fits your current semester and degree path.</span>
+          </li>
+          <li>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="var(--teal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><strong>Transparent reasoning</strong> — every recommendation includes a plain-language explanation of why it was suggested.</span>
+          </li>
+          <li>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="var(--teal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><strong>Helps choose relevant electives</strong> — filter by domain and difficulty to narrow down exactly what you need.</span>
+          </li>
+          <li>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="var(--teal)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><strong>Machine learning backbone</strong> — scores are computed by a trained model, not hand-curated rules.</span>
+          </li>
+        </ul>
+      </div>
+      <div class="why-stats">
+        <div class="stat-card">
+          <span class="stat-num">6+</span>
+          <span class="stat-label">Domains covered</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num">ML</span>
+          <span class="stat-label">Powered scoring</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num">0</span>
+          <span class="stat-label">Account required</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="section-cta">
+    <div class="section-inner cta-inner">
+      <h2>Ready to find your next course?</h2>
+      <p>Fill in your academic profile and get personalised recommendations in seconds.</p>
+      <a href="home.html" class="btn-hero">Get Started →</a>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="footer-logo">SmartRecSys</span>
+      <span class="footer-copy">Final-Year Major Project &mdash; AI-Powered Course Recommendation System</span>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="welcome.html">Welcome</a>
+        <a href="home.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="docs.html">Docs</a>
+        <a href="dashboard.html">Recommender</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="nav.js"></script>
+</body>
+</html>
