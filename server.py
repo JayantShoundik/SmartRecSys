@@ -5,7 +5,7 @@ import re
 import numpy as np
 import pandas as pd
 import torch
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -14,8 +14,8 @@ from database import init_db, SessionLocal, Student, Course, RecommendationAudit
 from dl_recommender_gpu import NeuralCollaborativeFiltering
 from train_neumf_large import NeuralMatrixFactorization
 
-# Initialize Flask app
-app = Flask(__name__)
+# Initialize Flask app to serve static frontend files and REST API
+app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)
 
 # Initialize SQLite database
@@ -403,5 +403,16 @@ def get_status():
         "device": str(device)
     })
 
+@app.route('/')
+def index():
+    return send_from_directory('.', 'welcome.html')
+
+@app.route('/<path:filename>')
+def serve_page(filename):
+    if os.path.exists(filename) and os.path.isfile(filename):
+        return send_from_directory('.', filename)
+    return send_from_directory('.', 'welcome.html')
+
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5001, debug=True)
+    print("🚀 SmartRecSys Full-Stack Server active on http://127.0.0.1:5001")
+    app.run(host='0.0.0.0', port=5001, debug=True, use_reloader=False)
