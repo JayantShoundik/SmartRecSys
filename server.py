@@ -61,6 +61,8 @@ def build_course_metadata(row, domain, difficulty, score, dept):
     
     # 1. Map difficulty level
     lvl = row['level'].replace(" Level", "")
+    if lvl == "Expert":
+        lvl = "Advanced"
     
     # 2. Dynamic duration
     lectures = int(row['num_lectures'])
@@ -240,4 +242,4 @@ def get_status():
     })
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=5001, debug=True)

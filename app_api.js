@@ -6,7 +6,7 @@ async function fetchRecommendations(userId, preferences) {
   const params = new URLSearchParams(window.location.search);
   const dept = params.get("dept") || "";
   
-  const res = await fetch("http://127.0.0.1:5000/recommend", {
+  const res = await fetch("http://127.0.0.1:5001/recommend", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
