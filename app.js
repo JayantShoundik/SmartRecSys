@@ -1,26 +1,44 @@
 // ── State ─────────────────────────────────────────────────────────────────────
 let allResults = [];
+let lastStudentId = null;
 
 // ── Fetch recommendations from Flask Backend API ──────────────────────────────
-async function fetchRecommendations(userId, preferences) {
+async function fetchRecommendations(userName, preferences) {
   const params = new URLSearchParams(window.location.search);
-  const dept = params.get("dept") || "";
   
+  const payload = {
+    user_id: userName,
+    preferences: {
+      domains: preferences.domains,
+      difficulty: preferences.difficulty,
+      dept: params.get("dept") || "Computer Science",
+      degree: params.get("degree") || "B.Tech (4-Year)",
+      batch: params.get("batch") || "2nd Year",
+      semester: parseInt(params.get("semester") || "3", 10),
+      cgpa: params.get("cgpa") ? parseFloat(params.get("cgpa")) : null,
+      completed_courses: params.get("completed_courses") || "",
+      current_courses: params.get("current_courses") || "",
+      career_goal: params.get("goal") || "Software Engineer"
+    }
+  };
+
   const res = await fetch("http://127.0.0.1:5001/recommend", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: userId,
-      preferences: {
-        domains: preferences.domains,
-        difficulty: preferences.difficulty,
-        dept: dept
-      }
-    })
+    body: JSON.stringify(payload)
   });
   
   if (!res.ok) throw new Error("API error: " + res.status);
-  return res.json();
+  const data = await res.json();
+  
+  if (data.student_id) {
+    lastStudentId = data.student_id;
+  }
+  if (data.active_model && document.getElementById("activeModelBadge")) {
+    document.getElementById("activeModelBadge").textContent = data.active_model;
+  }
+
+  return Array.isArray(data) ? data : (data.recommendations || []);
 }
 
 // ── Card builder (single source of truth for card markup) ─────────────────────
@@ -102,13 +120,72 @@ function renderProfileChips(params) {
   const items = [
     params.get("dept"),
     params.get("degree"),
-    params.get("batch") ? "Semester " + params.get("semester") : null,
+    params.get("batch"),
+    params.get("semester") ? "Semester " + params.get("semester") : null,
     params.get("level"),
-    params.get("goal"),
+    params.get("goal") ? "Goal: " + params.get("goal") : null,
   ].filter(Boolean);
   container.innerHTML = items
     .map(v => `<span class="profile-chip">${v}</span>`)
     .join("");
+}
+
+// ── Academic Advisory Report Modal Functions ─────────────────────────────────
+async function loadAndShowReport() {
+  const modal = document.getElementById("reportModal");
+  if (!modal) return;
+
+  try {
+    const url = lastStudentId 
+      ? `http://127.0.0.1:5001/api/report?student_id=${lastStudentId}`
+      : `http://127.0.0.1:5001/api/report`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Could not load advisory report");
+    const data = await res.json();
+
+    document.getElementById("repName").textContent = data.student.name;
+    document.getElementById("repDept").textContent = data.student.department;
+    document.getElementById("repDegree").textContent = data.student.degree;
+    document.getElementById("repYear").textContent = data.student.year;
+    document.getElementById("repSem").textContent = "Semester " + data.student.semester;
+    document.getElementById("repCgpa").textContent = data.student.cgpa;
+    document.getElementById("repGoal").textContent = data.student.career_goal;
+    document.getElementById("repDomains").textContent = data.student.target_domains;
+
+    document.getElementById("repModel").textContent = data.system_audit.model_engine;
+    document.getElementById("repTimestamp").textContent = data.system_audit.generated_at;
+    document.getElementById("repHash").textContent = data.system_audit.verification_hash;
+    document.getElementById("reportSubtitle").textContent = `Report Reference: ${data.report_id}`;
+
+    const listDiv = document.getElementById("reportCoursesList");
+    listDiv.innerHTML = "";
+
+    data.recommendations.forEach((c, idx) => {
+      const pct = Math.round(c.score * 100);
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #e5e7eb; gap:12px;";
+      row.innerHTML = `
+        <div style="flex:1;">
+          <div style="font-weight:600; color:#111827;">#${idx+1}. ${c.title}</div>
+          <div style="font-size:0.84rem; color:#6b7280; margin-top:2px;">
+            Domain: <strong>${c.domain}</strong> | Level: <strong>${c.difficulty}</strong> | Duration: <strong>${c.duration}</strong>
+          </div>
+          <div style="font-size:0.84rem; color:#4b5563; margin-top:4px; font-style:italic;">
+            "${c.reason}"
+          </div>
+        </div>
+        <div style="font-weight:700; font-size:1.05rem; color:#4f46e5; min-width:60px; text-align:right;">
+          ${pct}%
+        </div>
+      `;
+      listDiv.appendChild(row);
+    });
+
+    modal.classList.remove("hidden");
+  } catch (e) {
+    alert("Could not generate report: " + e.message);
+  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -144,7 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (levelMap[urlLevel]) sel.value = levelMap[urlLevel];
   }
 
-  // Trigger initial recommendations auto-loading based on welcome profile
+  // Auto-fetch recommendations on page load
   setTimeout(() => {
     document.getElementById("recommendBtn").click();
   }, 100);
@@ -169,7 +246,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const data = await fetchRecommendations(name, { domains, difficulty });
-      allResults = difficulty ? data.filter(c => c.difficulty === difficulty) : data;
+      allResults = difficulty ? data.filter(c => c.difficulty === difficulty || c.difficulty === "All Levels" || c.difficulty === "All") : data;
+      if (!allResults.length) allResults = data;
       populateDomainFilter(allResults);
       renderFeatured(allResults);
       renderResults(allResults);
@@ -184,4 +262,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Filter dropdowns
   document.getElementById("filterDomain").addEventListener("change", applyFilters);
   document.getElementById("filterDifficulty").addEventListener("change", applyFilters);
+
+  // Report Modal Listeners
+  const openReportBtn = document.getElementById("openReportBtn");
+  if (openReportBtn) openReportBtn.addEventListener("click", loadAndShowReport);
+
+  const closeReportBtn = document.getElementById("closeReportBtn");
+  if (closeReportBtn) closeReportBtn.addEventListener("click", () => document.getElementById("reportModal").classList.add("hidden"));
+
+  const closeReportModalBtn = document.getElementById("closeReportModalBtn");
+  if (closeReportModalBtn) closeReportModalBtn.addEventListener("click", () => document.getElementById("reportModal").classList.add("hidden"));
+
+  const printReportBtn = document.getElementById("printReportBtn");
+  if (printReportBtn) printReportBtn.addEventListener("click", () => window.print());
 });
