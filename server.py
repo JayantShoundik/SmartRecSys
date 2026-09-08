@@ -19,33 +19,50 @@ except Exception as e:
     print(f"Error loading recommender: {e}")
     sys.exit(1)
 
-# Deep Learning (NCF) Model Loading if available
-ncf_model = None
+# Deep Learning (NeuMF / NCF) Model Loading if available
+deep_model = None
+model_type = "Hybrid (TF-IDF + Collaborative)"
 device = None
-ncf_dataset = None
 
 try:
     import torch
-    from dl_recommender_gpu import NeuralCollaborativeFiltering, CourseInteractionDataset
+    from train_neumf_large import NeuralMatrixFactorization
+    from dl_recommender_gpu import NeuralCollaborativeFiltering
     
-    model_path = "models/ncf_recommender.pth"
-    if os.path.exists(model_path):
-        print("Found trained NCF model weights. Loading...")
-        if torch.cuda.is_available():
-            device = torch.device("cuda")
-        elif torch.backends.mps.is_available():
-            device = torch.device("mps")
-        else:
-            device = torch.device("cpu")
-            
-        ncf_dataset = CourseInteractionDataset(recommender.df, num_users=1000)
-        ncf_model = NeuralCollaborativeFiltering(num_users=1000, num_items=ncf_dataset.num_items, embedding_dim=16)
-        ncf_model.load_state_dict(torch.load(model_path, map_location=device))
-        ncf_model.to(device)
-        ncf_model.eval()
-        print(f"NCF model loaded successfully on {device}!")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+    else:
+        device = torch.device("cpu")
+        
+    neumf_path = "models/neumf_large.pth"
+    ncf_path = "models/ncf_recommender.pth"
+    
+    if os.path.exists(neumf_path):
+        checkpoint = torch.load(neumf_path, map_location=device)
+        num_users = checkpoint.get('num_users', 25000)
+        num_items = checkpoint.get('num_items', len(recommender.df))
+        gmf_dim = checkpoint.get('latent_dim_gmf', 32)
+        mlp_dim = checkpoint.get('latent_dim_mlp', 32)
+        
+        deep_model = NeuralMatrixFactorization(num_users=num_users, num_items=num_items, latent_dim_gmf=gmf_dim, latent_dim_mlp=mlp_dim)
+        deep_model.load_state_dict(checkpoint['model_state_dict'])
+        deep_model.to(device)
+        deep_model.eval()
+        model_type = "Large-Scale NeuMF (Neural Matrix Factorization)"
+        print(f"✅ Loaded Large-Scale NeuMF Model weights successfully on {device}!")
+    elif os.path.exists(ncf_path):
+        deep_model = NeuralCollaborativeFiltering(num_users=1000, num_items=len(recommender.df), embedding_dim=16)
+        deep_model.load_state_dict(torch.load(ncf_path, map_location=device))
+        deep_model.to(device)
+        deep_model.eval()
+        model_type = "Neural Collaborative Filtering (NCF)"
+        print(f"✅ Loaded NCF Model weights successfully on {device}!")
+    else:
+        print("ℹ️ No deep learning weights found in models/. Using Hybrid TF-IDF + Collaborative engine.")
 except Exception as e:
-    print(f"Deep learning NCF components not initialized: {e}")
+    print(f"Deep learning components not initialized: {e}")
 
 # Simple hash function to map any name string to a stable User ID (0-999)
 def get_user_id_from_name(name):
@@ -184,31 +201,45 @@ def get_recommendations():
                 filtered_df = filtered_df[filtered_df['level'] == target_difficulty]
                 
         # 3. Retrieve scored items
-        # If NCF model is loaded, we use NCF scores, otherwise Hybrid recommender scores
-        n_candidates = len(filtered_df)
+        # If Deep Learning model (NeuMF / NCF) is loaded, compute neural predictions; otherwise use Weighted Hybrid
         top_k = 6 # Render top-6 recommended cards on the dashboard
-        
-        # Make query course selection
-        if len(user_enrollments) == 0:
-            query_idx = 0
-        else:
-            query_idx = user_enrollments[0]
-            
-        query_course_id = recommender.df.iloc[query_idx]['course_id']
-        
-        # Calculate hybrid recommendation scores
-        scores_df = recommender.get_hybrid_recommendations(query_course_id, alpha=0.5, top_n=len(recommender.df))
-        scores_df = scores_df.set_index('course_id')
-        
-        # Map calculated scores to our filtered candidates list
+        candidate_indices = filtered_df.index.values
         candidate_ids = filtered_df['course_id'].values
-        candidate_scores = []
-        for cid in candidate_ids:
-            if cid in scores_df.index:
-                candidate_scores.append(scores_df.loc[cid, 'hybrid_score'])
+
+        if deep_model is not None:
+            try:
+                # Map user_id to safe range
+                safe_u = user_id % 25000 if "NeuMF" in model_type else user_id % 1000
+                u_tensor = torch.full((len(candidate_indices),), safe_u, dtype=torch.long, device=device)
+                i_tensor = torch.tensor(candidate_indices, dtype=torch.long, device=device)
+
+                with torch.no_grad():
+                    deep_scores = deep_model(u_tensor, i_tensor).cpu().numpy()
+                candidate_scores = deep_scores.tolist()
+            except Exception as dl_err:
+                print(f"Deep learning inference fallback: {dl_err}")
+                deep_model_fallback = True
             else:
-                candidate_scores.append(0.5) # fallback score
-                
+                deep_model_fallback = False
+        else:
+            deep_model_fallback = True
+
+        if deep_model_fallback:
+            if len(user_enrollments) == 0:
+                query_idx = 0
+            else:
+                query_idx = user_enrollments[0]
+            query_course_id = recommender.df.iloc[query_idx]['course_id']
+            scores_df = recommender.get_hybrid_recommendations(query_course_id, alpha=0.5, top_n=len(recommender.df))
+            scores_df = scores_df.set_index('course_id')
+
+            candidate_scores = []
+            for cid in candidate_ids:
+                if cid in scores_df.index:
+                    candidate_scores.append(scores_df.loc[cid, 'hybrid_score'])
+                else:
+                    candidate_scores.append(0.5)
+
         filtered_df = filtered_df.copy()
         filtered_df['score'] = candidate_scores
         
@@ -237,7 +268,8 @@ def get_status():
     return jsonify({
         "status": "online",
         "total_courses": len(recommender.df) if recommender.df is not None else 0,
-        "ncf_loaded": ncf_model is not None,
+        "deep_model_loaded": deep_model is not None,
+        "active_model": model_type,
         "device": str(device) if device is not None else "cpu"
     })
 

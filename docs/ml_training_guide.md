@@ -38,6 +38,22 @@ You are in charge of training and evaluating two core models:
 *   **Command:** `python3 dl_recommender_gpu.py`
 *   **What it does:** Maps users and courses to a latent embedding layer, passes them through a Multi-Layer Perceptron (MLP) neural network, trains weights using Binary Cross-Entropy Loss (`BCELoss`), and saves the trained state to `models/ncf_recommender.pth`.
 
+### 3. State-of-the-Art Large-Scale Model (NeuMF: Neural Matrix Factorization)
+*   **Scripts:** `generate_large_scale_interactions.py`, `train_neumf_large.py`
+*   **Commands:**
+    ```bash
+    # Step 1: Synthesize 25,000 students across realistic academic curriculum tracks
+    python3 generate_large_scale_interactions.py
+
+    # Step 2: Train Large-Scale NeuMF Deep Learning Architecture
+    python3 train_neumf_large.py
+    ```
+*   **What it does:**
+    *   Synthesizes over **25,000 smart campus learners** and **~250,000 interaction trajectories** across curriculum tracks (Web Dev, Data Science & AI, UI/UX, Quantitative Finance, Creative Arts).
+    *   Combines **Generalized Matrix Factorization (GMF)** + **Deep Multi-Layer Perceptron (MLP)** with Batch Normalization and Dropout.
+    *   Evaluates Leave-One-Out academic metrics (**Hit Ratio@5, Hit Ratio@10, NDCG@5, NDCG@10, MRR**) against 99 negative course candidates per student.
+    *   Exports performance benchmark plot to `plots/large_scale_evaluation.png` and saves weights to `models/neumf_large.pth`.
+
 ---
 
 ## ⚙️ Hyperparameter Tuning (Optimization)

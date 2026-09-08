@@ -62,15 +62,24 @@ graph TD
 
 ---
 
-### Phase 2: PyTorch Deep Learning NCF Model Training ⏳
-* **Objective**: Train the Neural Collaborative Filtering model with user/item embeddings and MLP architecture, saving weights to `models/ncf_recommender.pth`.
-* **Hardware Support**: Automatic detection of **Apple Silicon GPU (MPS)**, **NVIDIA CUDA**, or CPU.
-* **Script**: `dl_recommender_gpu.py`
-* **Execution Command**:
+### Phase 2: PyTorch Deep Learning Models Training (NCF & Large-Scale NeuMF) ⏳
+* **Objective**: Train the Deep Learning models (Base NCF and Large-Scale NeuMF) with GPU/MPS acceleration.
+
+* **Option A: Base NCF Training (1,000 users)**:
   ```bash
   python3 dl_recommender_gpu.py
   ```
-* **Verification**: Verify that `models/ncf_recommender.pth` is created and sample inference outputs top-5 predictions.
+  *Output:* `models/ncf_recommender.pth`
+
+* **Option B: Large-Scale NeuMF Training (25,000+ students, High-Accuracy Benchmark)**:
+  ```bash
+  # Step 1: Synthesize 25,000 students across realistic curriculum tracks (~250,000 interactions)
+  python3 generate_large_scale_interactions.py
+
+  # Step 2: Train NeuMF (GMF + MLP) and run Leave-One-Out Evaluation (HR@5, HR@10, NDCG@10, MRR)
+  python3 train_neumf_large.py
+  ```
+  *Output:* `models/neumf_large.pth`, `plots/large_scale_evaluation.png`
 
 ---
 
