@@ -1,0 +1,338 @@
+[
+  {
+    "cohort_id": 1,
+    "profile": {
+      "name": "Aarav Sharma",
+      "dept": "Computer Science & Engineering",
+      "degree": "B.Tech (4-Year)",
+      "batch": "3rd Year",
+      "semester": 5,
+      "domains": [
+        "Data Science",
+        "Machine Learning"
+      ],
+      "difficulty": "Intermediate",
+      "career_goal": "Machine Learning Engineer",
+      "completed_courses": "Python for Data Analysis, Linear Algebra"
+    },
+    "recommendations": [
+      {
+        "rank": 1,
+        "title": "Visualizing Data",
+        "subject": "Business Finance",
+        "level": "Intermediate",
+        "score": 80.23,
+        "skills": [
+          "Business Finance",
+          "Core Concepts",
+          "Hands-on Projects"
+        ],
+        "reason": "Directly satisfies your academic focus in Data Science at intermediate level; develops core technical competencies essential for an aspiring Machine Learning Engineer; logically builds upon your completed coursework in Python for Data Analysis."
+      },
+      {
+        "rank": 2,
+        "title": "Fundraising Success: The Art & Science of Major Gifts",
+        "subject": "Business Finance",
+        "level": "Intermediate",
+        "score": 80.13,
+        "skills": [
+          "Business Finance",
+          "Core Concepts",
+          "Hands-on Projects"
+        ],
+        "reason": "Directly satisfies your academic focus in Data Science at intermediate level; develops core technical competencies essential for an aspiring Machine Learning Engineer; logically builds upon your completed coursework in Python for Data Analysis."
+      },
+      {
+        "rank": 3,
+        "title": "Python for Finance: Investment Fundamentals & Data Analytics",
+        "subject": "Business Finance",
+        "level": "All Levels",
+        "score": 80.09,
+        "skills": [
+          "Business Finance",
+          "Python",
+          "Financial Modeling"
+        ],
+        "reason": "Directly satisfies your academic focus in Data Science at all levels level; develops core technical competencies essential for an aspiring Machine Learning Engineer; logically builds upon your completed coursework in Python for Data Analysis."
+      },
+      {
+        "rank": 4,
+        "title": "Excel functions to analyze and visualize data",
+        "subject": "Business Finance",
+        "level": "Intermediate",
+        "score": 79.7,
+        "skills": [
+          "Business Finance",
+          "Microsoft Excel"
+        ],
+        "reason": "Directly satisfies your academic focus in Data Science at intermediate level; develops core technical competencies essential for an aspiring Machine Learning Engineer; logically builds upon your completed coursework in Python for Data Analysis."
+      },
+      {
+        "rank": 5,
+        "title": "Big Data and Apache Hadoop for Developers - Fundamentals",
+        "subject": "Web Development",
+        "level": "Intermediate",
+        "score": 79.59,
+        "skills": [
+          "Web Development",
+          "Core Concepts",
+          "Hands-on Projects"
+        ],
+        "reason": "Directly satisfies your academic focus in Data Science at intermediate level; develops core technical competencies essential for an aspiring Machine Learning Engineer; logically builds upon your completed coursework in Python for Data Analysis."
+      }
+    ]
+  },
+  {
+    "cohort_id": 2,
+    "profile": {
+      "name": "Priya Patel",
+      "dept": "Information Technology",
+      "degree": "B.Tech (4-Year)",
+      "batch": "1st Year",
+      "semester": 1,
+      "domains": [
+        "Cybersecurity",
+        "Cloud Computing"
+      ],
+      "difficulty": "Beginner",
+      "career_goal": "Cloud Security Architect",
+      "completed_courses": ""
+    },
+    "recommendations": [
+      {
+        "rank": 1,
+        "title": "Security for your WordPress site",
+        "subject": "Web Development",
+        "level": "Beginner",
+        "score": 79.26,
+        "skills": [
+          "Web Development",
+          "Cybersecurity",
+          "WordPress"
+        ],
+        "reason": "Directly satisfies your academic focus in Cybersecurity at beginner level; develops core technical competencies essential for an aspiring Cloud Security Architect."
+      },
+      {
+        "rank": 2,
+        "title": "PHP Security",
+        "subject": "Web Development",
+        "level": "All Levels",
+        "score": 79.07,
+        "skills": [
+          "Web Development",
+          "Cybersecurity"
+        ],
+        "reason": "Directly satisfies your academic focus in Cybersecurity at all levels level; develops core technical competencies essential for an aspiring Cloud Security Architect."
+      },
+      {
+        "rank": 3,
+        "title": "Learn Spring Security 4 Basics - Hands On",
+        "subject": "Web Development",
+        "level": "Beginner",
+        "score": 79.04,
+        "skills": [
+          "Web Development",
+          "Cybersecurity",
+          "Spring Framework"
+        ],
+        "reason": "Directly satisfies your academic focus in Cybersecurity at beginner level; develops core technical competencies essential for an aspiring Cloud Security Architect."
+      },
+      {
+        "rank": 4,
+        "title": "React JS - Build real world JS apps & deploy on cloud",
+        "subject": "Web Development",
+        "level": "All Levels",
+        "score": 78.98,
+        "skills": [
+          "Web Development",
+          "React.js",
+          "Cloud Computing"
+        ],
+        "reason": "Directly satisfies your academic focus in Cybersecurity at all levels level; develops core technical competencies essential for an aspiring Cloud Security Architect."
+      },
+      {
+        "rank": 5,
+        "title": "Wordpress Security",
+        "subject": "Web Development",
+        "level": "All Levels",
+        "score": 78.96,
+        "skills": [
+          "Web Development",
+          "Cybersecurity",
+          "WordPress"
+        ],
+        "reason": "Directly satisfies your academic focus in Cybersecurity at all levels level; develops core technical competencies essential for an aspiring Cloud Security Architect."
+      }
+    ]
+  },
+  {
+    "cohort_id": 3,
+    "profile": {
+      "name": "Rohan Verma",
+      "dept": "Electronics & Communication",
+      "degree": "B.Tech (4-Year)",
+      "batch": "2nd Year",
+      "semester": 4,
+      "domains": [
+        "Programming",
+        "Web Development"
+      ],
+      "difficulty": "Intermediate",
+      "career_goal": "Full Stack Developer",
+      "completed_courses": "C++ Programming, Digital Logic"
+    },
+    "recommendations": [
+      {
+        "rank": 1,
+        "title": "The Complete TypeScript Programming Guide for Web Developers",
+        "subject": "Web Development",
+        "level": "Intermediate",
+        "score": 88.73,
+        "skills": [
+          "Web Development",
+          "Core Concepts",
+          "Hands-on Projects"
+        ],
+        "reason": "Directly satisfies your academic focus in Programming at intermediate level; develops core technical competencies essential for an aspiring Full Stack Developer; logically builds upon your completed coursework in C++ Programming."
+      },
+      {
+        "rank": 2,
+        "title": "Web Development w/ Google\u2019s Go (golang) Programming Language",
+        "subject": "Web Development",
+        "level": "Intermediate",
+        "score": 88.21,
+        "skills": [
+          "Web Development",
+          "Core Concepts",
+          "Hands-on Projects"
+        ],
+        "reason": "Directly satisfies your academic focus in Programming at intermediate level; develops core technical competencies essential for an aspiring Full Stack Developer; logically builds upon your completed coursework in C++ Programming."
+      },
+      {
+        "rank": 3,
+        "title": "Web Programming with Python",
+        "subject": "Web Development",
+        "level": "All Levels",
+        "score": 88.13,
+        "skills": [
+          "Web Development",
+          "Python"
+        ],
+        "reason": "Directly satisfies your academic focus in Programming at all levels level; develops core technical competencies essential for an aspiring Full Stack Developer; logically builds upon your completed coursework in C++ Programming."
+      },
+      {
+        "rank": 4,
+        "title": "3D Programming with WebGL and Babylon.js for Beginners",
+        "subject": "Web Development",
+        "level": "Intermediate",
+        "score": 87.9,
+        "skills": [
+          "Web Development",
+          "Core Concepts",
+          "Hands-on Projects"
+        ],
+        "reason": "Directly satisfies your academic focus in Programming at intermediate level; develops core technical competencies essential for an aspiring Full Stack Developer; logically builds upon your completed coursework in C++ Programming."
+      },
+      {
+        "rank": 5,
+        "title": "Python Programming: Create an Digital Marketplace in Django",
+        "subject": "Web Development",
+        "level": "All Levels",
+        "score": 87.83,
+        "skills": [
+          "Web Development",
+          "Python",
+          "Django"
+        ],
+        "reason": "Directly satisfies your academic focus in Programming at all levels level; develops core technical competencies essential for an aspiring Full Stack Developer; logically builds upon your completed coursework in C++ Programming."
+      }
+    ]
+  },
+  {
+    "cohort_id": 4,
+    "profile": {
+      "name": "Ananya Iyer",
+      "dept": "Computer Applications",
+      "degree": "B.Sc / BCA (3-Year)",
+      "batch": "3rd Year",
+      "semester": 6,
+      "domains": [
+        "Web Development",
+        "UI/UX Design"
+      ],
+      "difficulty": "Advanced",
+      "career_goal": "Frontend Architect",
+      "completed_courses": "HTML/CSS Basics, JavaScript Fundamentals"
+    },
+    "recommendations": [
+      {
+        "rank": 1,
+        "title": "Complete Web Development with HTML, CSS and Javascript",
+        "subject": "Web Development",
+        "level": "Intermediate",
+        "score": 87.63,
+        "skills": [
+          "Web Development",
+          "JavaScript",
+          "HTML5",
+          "CSS3"
+        ],
+        "reason": "Directly satisfies your academic focus in Web Development at intermediate level; develops core technical competencies essential for an aspiring Frontend Architect; logically builds upon your completed coursework in HTML/CSS Basics."
+      },
+      {
+        "rank": 2,
+        "title": "Mobile App Design in Photoshop from Scratch - UI & UX DESIGN",
+        "subject": "Graphic Design",
+        "level": "All Levels",
+        "score": 87.42,
+        "skills": [
+          "Graphic Design",
+          "Photoshop",
+          "UI Design",
+          "UX Design"
+        ],
+        "reason": "Directly satisfies your academic focus in UI/UX Design at all levels level; develops core technical competencies essential for an aspiring Frontend Architect; logically builds upon your completed coursework in HTML/CSS Basics."
+      },
+      {
+        "rank": 3,
+        "title": "The Web Developers Guide: Learn HTML & CSS Fundamentals",
+        "subject": "Web Development",
+        "level": "All Levels",
+        "score": 86.58,
+        "skills": [
+          "Web Development",
+          "HTML5",
+          "CSS3"
+        ],
+        "reason": "Directly satisfies your academic focus in Web Development at all levels level; develops core technical competencies essential for an aspiring Frontend Architect; logically builds upon your completed coursework in HTML/CSS Basics."
+      },
+      {
+        "rank": 4,
+        "title": "HTML and CSS: A Guide to Web Design",
+        "subject": "Web Development",
+        "level": "All Levels",
+        "score": 86.37,
+        "skills": [
+          "Web Development",
+          "HTML5",
+          "CSS3"
+        ],
+        "reason": "Directly satisfies your academic focus in Web Development at all levels level; develops core technical competencies essential for an aspiring Frontend Architect; logically builds upon your completed coursework in HTML/CSS Basics."
+      },
+      {
+        "rank": 5,
+        "title": "Master Electron: Desktop Apps using HTML, JavaScript & CSS",
+        "subject": "Web Development",
+        "level": "Intermediate",
+        "score": 86.27,
+        "skills": [
+          "Web Development",
+          "JavaScript",
+          "HTML5",
+          "CSS3"
+        ],
+        "reason": "Directly satisfies your academic focus in Web Development at intermediate level; develops core technical competencies essential for an aspiring Frontend Architect; logically builds upon your completed coursework in HTML/CSS Basics."
+      }
+    ]
+  }
+]

@@ -79,39 +79,92 @@ def extract_course_skills(title, subject):
         "python": "Python", "javascript": "JavaScript", "react": "React.js",
         "node": "Node.js", "html": "HTML5", "css": "CSS3", "sql": "SQL",
         "django": "Django", "flask": "Flask", "bootstrap": "Bootstrap",
-        "java": "Java", "c++": "C++", "data": "Data Analysis",
+        "java": "Java", "c++": "C++", "data science": "Data Science",
         "machine learning": "Machine Learning", "deep learning": "Deep Learning",
         "pandas": "Pandas", "numpy": "NumPy", "docker": "Docker", "aws": "AWS",
-        "photoshop": "Photoshop", "illustrator": "Illustrator", "ui": "UI Design",
-        "ux": "UX Design", "trading": "Technical Analysis", "finance": "Financial Modeling",
-        "excel": "Microsoft Excel", "accounting": "Accounting", "git": "Git"
+        "photoshop": "Photoshop", "illustrator": "Illustrator", "ui/ux": "UI/UX Design",
+        "ui": "UI Design", "ux": "UX Design", "trading": "Technical Analysis",
+        "finance": "Financial Modeling", "excel": "Microsoft Excel", "accounting": "Accounting",
+        "git": "Git", "security": "Cybersecurity", "cloud": "Cloud Computing",
+        "lamp": "LAMP Stack", "linux": "Linux", "spring": "Spring Framework",
+        "wordpress": "WordPress"
     }
+    short_words = {"ui", "ux", "git", "aws", "sql", "java", "css", "html", "lamp", "node"}
     for kw, skill in keywords.items():
-        if kw in t:
-            skills.append(skill)
+        if kw in short_words or len(kw) <= 3:
+            if re.search(r'\b' + re.escape(kw) + r'\b', t):
+                skills.append(skill)
+        else:
+            if kw in t:
+                skills.append(skill)
     if len(skills) == 1:
         skills.extend(["Core Concepts", "Hands-on Projects"])
     return list(dict.fromkeys(skills))
 
+def format_level(level_str):
+    l = str(level_str).strip().lower()
+    if "all" in l:
+        return "All Levels"
+    elif "beginner" in l:
+        return "Beginner"
+    elif "intermediate" in l:
+        return "Intermediate"
+    elif "expert" in l or "advanced" in l:
+        return "Advanced"
+    return str(level_str).replace(" Levels", "").replace(" Level", "").strip()
+
 # Helper: Build dynamic pedagogical rationale
-def generate_xai_reason(row, dept, chosen_domain, difficulty, career_goal, completed_courses):
+def generate_xai_reason(row, dept, domains, difficulty, career_goal, completed_courses):
     title = row['course_title']
     subj = row['subject']
-    lvl = row['level'].replace(" Level", "")
+    lvl = format_level(row.get('level', 'All Levels'))
     
     reasons = []
-    if chosen_domain and chosen_domain != "General":
-        reasons.append(f"Directly satisfies your target domain in {chosen_domain} at {lvl} level")
-    if career_goal:
-        reasons.append(f"develops core technical competencies essential for aspiring {career_goal}s")
-    elif dept:
-        reasons.append(f"augments your primary curriculum in {dept}")
+    
+    # 1. Domain alignment
+    matched_domain = None
+    if domains:
+        t_low = title.lower()
+        for d in domains:
+            d_low = d.lower()
+            if d_low in t_low or (d_low in ["web development", "programming"] and subj == "Web Development"):
+                matched_domain = d
+                break
+            elif any(k in d_low for k in ["cyber", "cloud", "security", "network"]) and any(k in t_low for k in ["security", "aws", "cloud", "network", "linux"]):
+                matched_domain = d
+                break
+            elif any(k in d_low for k in ["data", "machine learning", "ai"]) and any(k in t_low for k in ["data", "python", "machine", "learning", "ai"]):
+                matched_domain = d
+                break
+            elif any(k in d_low for k in ["design", "ui", "ux"]) and subj == "Graphic Design":
+                matched_domain = d
+                break
+            elif any(k in d_low for k in ["finance", "business"]) and subj == "Business Finance":
+                matched_domain = d
+                break
+        if not matched_domain:
+            matched_domain = domains[0]
+            
+    if matched_domain and matched_domain != "General":
+        reasons.append(f"Directly satisfies your academic focus in {matched_domain} at {lvl.lower()} level")
+    else:
+        reasons.append(f"Directly fulfills your technical focus in {subj} at {lvl.lower()} level")
+        
+    # 2. Career Goal / Department
+    if career_goal and career_goal.strip().lower() not in ["other", "none", "", "select"]:
+        reasons.append(f"develops core technical competencies essential for an aspiring {career_goal.strip()}")
+    elif dept and dept.strip().lower() not in ["other", "none", ""]:
+        reasons.append(f"accelerates your engineering specialization in {dept.strip()}")
+    else:
+        reasons.append("builds career-ready technical expertise and practical competency")
 
-    if completed_courses:
-        reasons.append(f"builds upon your completed foundation in {completed_courses.split(',')[0].strip()}")
+    # 3. Prerequisites / completed courses
+    if completed_courses and completed_courses.strip():
+        first_c = completed_courses.split(',')[0].strip()
+        reasons.append(f"logically builds upon your completed coursework in {first_c}")
 
     reason_str = "; ".join(reasons) + "."
-    return reason_str.capitalize()
+    return reason_str
 
 @app.route('/recommend', methods=['GET', 'POST'])
 def recommend():
@@ -293,14 +346,12 @@ def recommend():
         for rank, (_, row) in enumerate(top_matches.iterrows(), 1):
             title = row['course_title']
             subj = row['subject']
-            lvl = row['level'].replace(" Level", "").replace(" Levels", "")
-            if lvl == "Expert": lvl = "Advanced"
-            if lvl == "All": lvl = "All Levels"
+            lvl = format_level(row['level'])
             
             lectures = int(row['num_lectures'])
             duration = f"{max(4, min(12, lectures // 4))} Weeks"
             skills = extract_course_skills(title, subj)
-            reason = generate_xai_reason(row, dept, domains[0] if domains else "General", difficulty, goal, completed)
+            reason = generate_xai_reason(row, dept, domains, difficulty, goal, completed)
 
             card_obj = {
                 "rank": rank,
