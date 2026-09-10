@@ -1,50 +1,101 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[conference,letterpaper]{IEEEtran}
 \IEEEoverridecommandlockouts
-\usepackage{cite}
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+%\usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
-\usepackage{xcolor}
-\usepackage{booktabs}
-\usepackage{url}
-
+\usepackage[OT1]{fontenc}
+\usepackage{pifont}
+\usepackage{multirow}
+\usepackage{threeparttable}
+\usepackage{booktabs}% http://ctan.org/pkg/booktabs
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[dvipsnames,svgnames]{xcolor, colortbl}
+\newcommand{\etal}{{\em et al.\ }}
+\newcommand*{\blue}{\textcolor{blue}}
+\newcommand*{\red}{\textcolor{red}}
+\definecolor{LightCyan}{rgb}{0.88,1,1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
-
 \begin{document}
 
+%%----------------------------------------------------------------------------------%%
+%% 							TITLE AND LIST OF AUTHORS
+%%----------------------------------------------------------------------------------%%
 \title{SmartRecSys: A Deep Neural Hybrid Recommendation Architecture Resolving Cold-Start and Topological Sparsity in Smart Campus E-Learning Environments}
 
 \author{
-\IEEEauthorblockN{Jayant Shoundik\IEEEauthorrefmark{1}, [Co-Author 2]\IEEEauthorrefmark{1}, [Co-Author 3]\IEEEauthorrefmark{1}, [Co-Author 4]\IEEEauthorrefmark{1}, and [Faculty Guide Name]\IEEEauthorrefmark{2}}
-\IEEEauthorblockA{\IEEEauthorrefmark{1}Department of Computer Science and Engineering, [Your College / University Name], [City, Country]}
-\IEEEauthorblockA{\IEEEauthorrefmark{2}Faculty Project Supervisor, Department of Computer Science and Engineering, [Your College / University Name], [City, Country]}
-Email: jayantshoundik@gmail.com
+\IEEEauthorblockN{
+Jayant Shoundik\IEEEauthorrefmark{1},
+Co-Author Two\IEEEauthorrefmark{1},
+Co-Author Three\IEEEauthorrefmark{1},
+Co-Author Four\IEEEauthorrefmark{1}, and
+Faculty Supervisor Name\IEEEauthorrefmark{2}
+}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}Department of Computer Science and Engineering, [Your College / University Name], [City, Country]\\
+\IEEEauthorrefmark{2}Faculty Project Supervisor, Department of Computer Science and Engineering, [Your College / University Name], [City, Country]\\
+Email: jayantshoundik@gmail.com}
 }
 
 \maketitle
 
+%%----------------------------------------------------------------------------------%%
+%% 									PAPER ABSTRACT
+%%----------------------------------------------------------------------------------%%
 \begin{abstract}
 Modern higher education institutions increasingly rely on smart campus digital learning environments to augment structured curricula with modular e-learning coursework. However, existing academic recommendation engines suffer from three fundamental limitations: (1) catastrophic cold-start degradation when evaluating matriculating freshmen with zero enrollment history, (2) extreme topological matrix sparsity exceeding 99.8\% across campus course-selection databases, and (3) a pervasive lack of pedagogical explainability, leading to high recommendation rejection rates by students. In this paper, we propose SmartRecSys, an intelligent, multi-objective hybrid recommendation architecture engineered specifically for university smart campus infrastructures. The system synergistically integrates term-frequency inverse document frequency (TF-IDF) semantic vector space modeling, Truncated Singular Value Decomposition (SVD) latent factor analysis, and an end-to-end PyTorch-accelerated Neural Collaborative Filtering (NCF) deep neural network. Furthermore, we introduce an adaptive pedagogical constraint engine incorporating domain affinity masking, semester-aware prerequisite chaining, and difficulty penalty calibration, coupled with a model-agnostic post-hoc explainability (XAI) rationale generator. Empirical evaluation across a benchmark catalog of 3,672 deduplicated university-level curricular courses using rigorous 6-fold cross-validation demonstrates that the proposed hybrid architecture achieves superior Precision@K and Recall@K over individual collaborative and content-based baselines. Furthermore, evaluation across four diverse student cohort profiles demonstrates robust resolution of the zero-interaction cold-start dilemma (achieving initial recommendation match scores of 79.26\%--88.73\%) while generating transparent pedagogical justifications for academic advisory audits.
 \end{abstract}
 
+%%----------------------------------------------------------------------------------%%
+%% 									PAPER KEYWORDS
+%%----------------------------------------------------------------------------------%%
 \begin{IEEEkeywords}
 Educational Data Mining, Neural Collaborative Filtering, Cold-Start Problem, Matrix Sparsity, Explainable Artificial Intelligence (XAI), Latent Factor Models, Smart Campus.
 \end{IEEEkeywords}
 
+%%----------------------------------------------------------------------------------%%
+%% 								MAIN CONTENT OF THE PAPER
+%%----------------------------------------------------------------------------------%%
+
 \section{Introduction}
-Higher education institutions have undergone rapid digital transformation, transitioning toward hybrid pedagogies that blend accredited degree curricula with asynchronous digital coursework \cite{hazar2025}. In contemporary smart campus ecosystems, undergraduate students are confronted with an overwhelming diversity of technical electives, certification tracks, and modular online learning units. Navigating these multidimensional catalogs without individualized academic advising frequently precipitates suboptimal course selections, prerequisite deficiencies, cognitive overload, and delayed degree progression \cite{he2017}.
+Higher education institutions have undergone rapid digital transformation, transitioning toward hybrid pedagogies that blend accredited degree curricula with asynchronous digital coursework \cite{hazar2025}. In contemporary smart campus ecosystems, undergraduate students are confronted with an overwhelming diversity of technical electives, certification tracks, and modular online learning units. Navigating these multidimensional catalogs without individualized academic advising frequently precipitates suboptimal course selections, prerequisite deficiencies, cognitive overload, and delayed degree progression \cite{he2017ncf}.
 
 Automated Course Recommender Systems (CRSs) have emerged as pivotal algorithmic tools within educational data mining (EDM) to guide learners through customized curricular pathways \cite{kotsiantis2012}. However, the direct application of standard commercial recommendation algorithms to higher education environments encounters three critical structural impediments:
 
 \begin{enumerate}
-    \item \textbf{The Extreme Topological Sparsity Problem}: In commercial platforms, interaction matrices often possess moderate engagement density through repetitive clicks and browsing trails. In university curricula, students enroll in only 40 to 50 distinct courses throughout an entire four-year undergraduate tenure. When mapped across institutional course catalogs containing thousands of units, the resulting student-course interaction matrix $\mathbf{R} \in \mathbb{R}^{M \times N}$ exhibits extreme topological sparsity ($\rho < 0.05\%$), destabilizing conventional collaborative filtering and matrix decomposition baselines \cite{shi2014, liu2021}.
-    \item \textbf{The Freshman Cold-Start Catastrophe}: Each academic term, incoming freshmen and transfer cohorts matriculate into the campus ecosystem with completely empty historical interaction vectors ($\mathbf{r}_u = \mathbf{0}$). Neighborhood-based and latent collaborative filtering algorithms fail catastrophically in this regime, frequently yielding arbitrary recommendations, nonsensical cross-disciplinary leakage, or default popularity-biased outputs \cite{lika2014}.
-    \item \textbf{The Pedagogical Explainability Deficit}: In higher education, course selection carries profound academic and financial implications. A recommendation presented as an opaque numerical prediction score is routinely distrusted and dismissed by students and academic advisors. Pedagogical adoption demands transparent, post-hoc explanations justifying \textit{why} a particular course satisfies degree constraints, remedies prerequisite gaps, aligns with declared career trajectories, and corresponds to the learner's current mastery level \cite{bodria2023}.
+    \item \textbf{The Extreme Topological Sparsity Problem}: In commercial platforms, interaction matrices often possess moderate engagement density through repetitive clicks, ratings, and browsing trails. In university curricula, students enroll in only 40 to 50 distinct courses throughout an entire four-year undergraduate tenure. When mapped across institutional course catalogs containing thousands of units, the resulting student-course interaction matrix $\mathbf{R} \in \mathbb{R}^{M \times N}$ exhibits extreme topological sparsity ($\rho < 0.05\%$), destabilizing conventional collaborative filtering and matrix decomposition baselines \cite{shi2014, liu2021matthew}.
+    \item \textbf{The Freshman Cold-Start Catastrophe}: Each academic term, incoming freshmen and transfer cohorts matriculate into the campus ecosystem with completely empty historical interaction vectors ($\mathbf{r}_u = \mathbf{0}$). Neighborhood-based and latent collaborative filtering algorithms fail catastrophically in this regime, frequently yielding arbitrary recommendations, nonsensical cross-disciplinary leakage, or default popularity-biased outputs \cite{lika2014, kluver2014}.
+    \item \textbf{The Pedagogical Explainability Deficit}: In higher education, course selection carries profound academic and financial implications. A recommendation presented as an opaque numerical prediction score is routinely distrusted and dismissed by students and academic advisors. Pedagogical adoption demands transparent, post-hoc explanations justifying \textit{why} a particular course satisfies degree constraints, remedies prerequisite gaps, aligns with declared career trajectories, and corresponds to the learner's current mastery level \cite{bodria2023xai, jannach2016}.
 \end{enumerate}
 
 To address these compounding challenges, this paper presents \textbf{SmartRecSys}, an intelligent, context-aware hybrid recommendation architecture developed for smart campus deployment. SmartRecSys unites deep learning latent factor modeling with semantic profile vectorization and pedagogical constraint programming.
+
+\section{Theoretical Foundations and Related Work}
+
+\subsection{Content-Based and Collaborative Paradigms in EDM}
+Course recommender systems trace their algorithmic lineage to classic Content-Based Filtering (CBF) and Collaborative Filtering (CF). Content-based approaches analyze syntactic textual metadata using Term Frequency-Inverse Document Frequency (TF-IDF) or keyword vector spaces \cite{pazzani2007}. While CBF inherently circumvents the cold-start problem by operating strictly on item attributes, it suffers from severe over-specialization and an inability to discover serendipitous cross-disciplinary courses \cite{romero2010}.
+
+Conversely, Collaborative Filtering methods exploit collective behavioral patterns under the assumption that students who shared historical enrollment affinities will exhibit concordant future preferences \cite{breese1998}. However, CF is exceptionally vulnerable to matrix sparsity and the Matthew Effect, wherein popular introductory electives receive an overwhelming disproportion of recommendations while specialized advanced courses remain in the algorithmic tail \cite{chen2023bpl, liu2021matthew}.
+
+\subsection{Matrix Factorization and Deep Neural Collaborative Filtering}
+To alleviate matrix sparsity, low-rank Matrix Factorization (MF) techniques project users and items into a shared lower-dimensional latent factor space $\mathbb{R}^k$. Singular Value Decomposition (SVD) decomposes the interaction matrix $\mathbf{R}$ into orthogonal singular vectors, capturing latent curriculum topics \cite{koren2009}. Nonetheless, conventional matrix factorization relies on linear inner products to estimate user-item interactions:
+\begin{equation}
+\hat{r}_{u,i} = \mathbf{p}_u^T \mathbf{q}_i = \sum_{f=1}^k p_{u,f} q_{i,f}
+\end{equation}
+As demonstrated by He \etal \cite{he2017ncf, he2017nfm}, the linear inner product is insufficient for capturing complex, non-linear relational geometries between student capabilities and multifaceted course curricula.
+
+Recent literature has turned toward Neural Collaborative Filtering (NCF) and deep hybrid models. NCF replaces the linear inner product with a multi-layer perceptron (MLP) architecture, enabling the network to learn arbitrary non-linear user-item interaction functions from dense embedding lookup tables \cite{he2017ncf, zhang2019deep, guo2017deepfm}.
+
+\subsection{Context-Awareness and Multi-Stakeholder Explainability}
+Recent peer-reviewed research underscores that educational recommenders cannot operate in a pedagogical vacuum. Joundy Hazar (2025) proposed a hybrid recommendation framework for smart campus e-learning, establishing the theoretical validity of weighted fusion between collaborative and content signals:
+\begin{equation}
+\text{Score}_{\text{hybrid}} = \alpha \cdot \text{Score}_{\text{content}} + (1 - \alpha) \cdot \text{Score}_{\text{collaborative}}
+\end{equation}
+where empirical campus evaluations demonstrated that setting $\alpha \approx 0.50$ balances accuracy against novelty \cite{hazar2025, trattner2020}. Furthermore, explainable AI (XAI) frameworks have been proven necessary to foster student agency, prevent algorithmic disillusionment, and verify compliance with academic prerequisites \cite{bodria2023xai, abdollahpouri2020, dawodu2022video}.
 
 \section{System Architecture \& Mathematical Formulation}
 
@@ -71,7 +122,7 @@ S_{\text{sem}}(u, i) = \cos(\mathbf{q}_u, \mathbf{v}_i) = \frac{\mathbf{q}_u \cd
 \end{equation}
 
 \subsection{Deep Neural Collaborative Filtering (NCF) Architecture}
-To overcome the geometric constraints of linear matrix factorization, SmartRecSys incorporates a deep dual-stream Neural Collaborative Filtering network implemented in PyTorch. Let $\mathbf{P} \in \mathbb{R}^{M \times d}$ and $\mathbf{Q} \in \mathbb{R}^{N \times d}$ denote dense user and course embedding matrices with latent dimension $d=16$. The concatenated representation $\mathbf{z}_0 = [\mathbf{p}_u \parallel \mathbf{q}_i] \in \mathbb{R}^{2d}$ propagates through a multi-layer perceptron:
+To overcome the geometric constraints of linear matrix factorization, SmartRecSys incorporates a deep dual-stream Neural Collaborative Filtering network implemented in PyTorch. Let $\mathbf{P} \in \mathbb{R}^{M \times d}$ and $\mathbf{Q} \in \mathbb{R}^{N \times d}$ denote dense user and course embedding matrices with latent dimension $d=16$. The concatenated representation $\mathbf{z}_0 = [\mathbf{p}_u \parallel \mathbf{q}_i] \in \mathbb{R}^{2d}$ propagates through an $L$-layer feedforward perceptron:
 \begin{equation}
 \mathbf{z}_1 = \text{ReLU}(\mathbf{W}_1 \mathbf{z}_0 + \mathbf{b}_1)
 \end{equation}
@@ -81,7 +132,7 @@ To overcome the geometric constraints of linear matrix factorization, SmartRecSy
 \begin{equation}
 \hat{y}_{u,i} = \sigma(\mathbf{W}_{\text{out}} \mathbf{z}_2 + b_{\text{out}})
 \end{equation}
-where $\sigma(x) = \frac{1}{1 + e^{-x}}$. The network is optimized via Binary Cross-Entropy with $L_2$ regularization:
+where $\sigma(x) = \frac{1}{1 + e^{-x}}$. The network is optimized via Binary Cross-Entropy with $L_2$ weight regularization:
 \begin{equation}
 \mathcal{L}_{\text{NCF}} = -\sum_{(u, i) \in \mathcal{Y} \cup \mathcal{Y}^-} \left[ y_{u,i} \log \hat{y}_{u,i} + (1 - y_{u,i}) \log(1 - \hat{y}_{u,i}) \right] + \frac{\lambda}{2} \|\Theta\|_2^2
 \end{equation}
@@ -126,16 +177,19 @@ We executed a 6-fold cross-validation protocol on the enrollment matrix. Table~\
 \caption{6-Fold Cross-Validation Performance Comparison}
 \label{tab:cv_results}
 \centering
+\begin{threeparttable}
 \begin{tabular}{lcccc}
 \toprule
 \textbf{Model Architecture} & \textbf{P@3} & \textbf{R@3} & \textbf{P@5} & \textbf{R@5} \\
 \midrule
 Content-Based (TF-IDF) & 0.0013 & 0.0038 & 0.0013 & 0.0063 \\
-Collaborative Filtering & 0.0014 & 0.0043 & 0.0012 & 0.0060 \\
+Collaborative Filtering (Cosine) & 0.0014 & 0.0043 & 0.0012 & 0.0060 \\
 SVD Matrix Factorization ($k=12$) & 0.0012 & 0.0037 & 0.0012 & 0.0062 \\
-\textbf{SmartRecSys (Proposed)} & \textbf{0.0017} & \textbf{0.0050} & \textbf{0.0014} & \textbf{0.0070} \\
+\rowcolor{LightCyan}
+\textbf{SmartRecSys (Proposed Hybrid)} & \textbf{0.0017} & \textbf{0.0050} & \textbf{0.0014} & \textbf{0.0070} \\
 \bottomrule
 \end{tabular}
+\end{threeparttable}
 \end{table}
 
 The SmartRecSys hybrid achieves a Recall@5 of \textbf{0.0070} compared to 0.0060 for pure collaborative filtering and 0.0062 for SVD, representing an empirical improvement of \textbf{+16.6\%}. Under severe campus sparsity, collaborative filtering suffers from disconnected graph partitions; the semantic content channel acts as an algorithmic bridge.
@@ -147,6 +201,7 @@ Four standardized student cohorts were evaluated on the deployed engine:
 \caption{Empirical Cohort Recommendations and Match Scores}
 \label{tab:cohorts}
 \centering
+\begin{threeparttable}
 \begin{tabular}{cllcc}
 \toprule
 \textbf{Cohort} & \textbf{Target Domain} & \textbf{Top Recommended Course} & \textbf{Match \%} \\
@@ -157,21 +212,21 @@ C3 (ECE) & Web Development & TypeScript Guide for Web Devs & 88.73\% \\
 C4 (BCA) & UI/UX Design & Complete Web Dev: HTML/CSS/JS & 87.63\% \\
 \bottomrule
 \end{tabular}
+\end{threeparttable}
 \end{table}
 
 For Cohort 2 (Priya Patel, 1st Year IT freshman, zero prior enrollments), SmartRecSys completely resolves the cold-start problem, achieving \textbf{79.26\%} relevance on entry-level cybersecurity while generating the verified XAI rationale: \textit{``Directly satisfies your academic focus in Cybersecurity at beginner level; develops core technical competencies essential for an aspiring Cloud Security Architect.''}
 
+\section{Discussion and Ethical Considerations}
+In educational recommendation, algorithms risk reinforcing curricular echo chambers—steering specific demographic groups toward historically overrepresented tracks. By integrating transparent career goal parameters ($G_u$) and explicit difficulty calibration ($S_{\text{dif}}$), SmartRecSys empowers students with sovereign agency over their recommendation trajectory, avoiding passive pigeonholing. Furthermore, persistent SQLite audit logging ensures institutional compliance and academic review feasibility.
+
 \section{Conclusion}
 In this work, we presented \textbf{SmartRecSys}, an intelligent hybrid recommendation architecture resolving the cold-start problem, matrix sparsity, and pedagogical opacity in smart campus environments. By unifying TF-IDF semantic vector space modeling, Truncated SVD, and PyTorch Neural Collaborative Filtering with domain affinity masking, SmartRecSys yields a +16.6\% gain in Recall@5 and provides transparent pedagogical justifications for smart campus e-learning.
 
-\begin{thebibliography}{00}
-\bibitem{hazar2025} M. J. Hazar, ``An Intelligent Hybrid Recommendation System for E-Learning Personalization in Smart Campus,'' \textit{IEEE Access / Springer Smart Campus Series}, vol. 13, pp. 10421--10435, 2025.
-\bibitem{he2017} X. He et al., ``Neural Collaborative Filtering,'' in \textit{Proc. 26th Int. Conf. World Wide Web (WWW)}, 2017, pp. 173--182.
-\bibitem{kotsiantis2012} S. B. Kotsiantis, ``Use of machine learning techniques for educational proposes,'' \textit{Artificial Intelligence Review}, vol. 37, no. 4, pp. 331--344, 2012.
-\bibitem{shi2014} Y. Shi, M. Larson, and A. Hanjalic, ``Collaborative Filtering beyond the User-Item Matrix,'' \textit{ACM Comput. Surv.}, vol. 47, no. 1, art. 3, 2014.
-\bibitem{liu2021} H. Liu, Z. Lin, and Y. Wang, ``Quantitative analysis of Matthew effect and sparsity problem of recommender systems,'' in \textit{Proc. IEEE Big Data}, 2021, pp. 412--419.
-\bibitem{lika2014} B. Lika, K. Kolomvatsos, and S. Hadjiefthymiades, ``Facing the cold start problem in recommender systems,'' \textit{Expert Systems with Applications}, vol. 41, no. 4, pp. 2065--2073, 2014.
-\bibitem{bodria2023} F. Bodria et al., ``Model-agnostic post-hoc explainability for recommender systems,'' \textit{Information Fusion}, vol. 89, pp. 450--468, 2023.
-\end{thebibliography}
+%%----------------------------------------------------------------------------------%%
+%% 							BIBLIOGRAPHY (PAPER REFERENCES)
+%%----------------------------------------------------------------------------------%%
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEReferences}
 
 \end{document}
