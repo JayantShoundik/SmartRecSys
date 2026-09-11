@@ -5,6 +5,7 @@
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
+\graphicspath{{figures/}{./}{../figures/}}
 \usepackage{textcomp}
 \usepackage[OT1]{fontenc}
 \usepackage{pifont}
@@ -13,7 +14,8 @@
 \usepackage{booktabs}% http://ctan.org/pkg/booktabs
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage[dvipsnames,svgnames]{xcolor, colortbl}
+\usepackage[dvipsnames,svgnames]{xcolor}
+\usepackage{colortbl}
 \newcommand{\etal}{{\em et al.\ }}
 \newcommand*{\blue}{\textcolor{blue}}
 \newcommand*{\red}{\textcolor{red}}
@@ -101,7 +103,7 @@ where empirical campus evaluations demonstrated that setting $\alpha \approx 0.5
 
 \begin{figure*}[htbp]
 \centering
-\includegraphics[width=0.92\textwidth]{figures/system_architecture.png}
+\includegraphics[width=0.92\textwidth]{system_architecture}
 \caption{SmartRecSys End-to-End Hybrid Recommendation and Explainability Pipeline: Illustrating dynamic academic profile intake, dual-stream feature representation (TF-IDF and PyTorch NCF), pedagogical policy gating, master calibrated fusion, and post-hoc XAI advisory audit logging.}
 \label{fig:architecture}
 \end{figure*}
@@ -204,12 +206,21 @@ Expert Level (Advanced Capstones) & 52 & 1.42\% \\
 \end{threeparttable}
 \end{table}
 
+As illustrated in Fig.~\ref{fig:level_dist}, over 87\% of courses reside in foundational or beginner difficulty tiers, underscoring the critical necessity of cognitive difficulty calibration $S_{\text{dif}}(u, i)$ to prevent early learner frustration.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{level_distribution}
+\caption{Certified pedagogical difficulty distribution across 3,672 curricular courses, indicating the high prevalence of introductory foundational modules.}
+\label{fig:level_dist}
+\end{figure}
+
 \subsection{Multicollinearity and Popularity Bias Analysis}
 A critical vulnerability of unconstrained recommender systems is popularity bias, where algorithms disproportionately recommend high-enrollment introductory electives regardless of individual relevance. As illustrated in Fig.~\ref{fig:correlation}, feature correlation analysis across the catalog revealed a pronounced Pearson correlation ($r = 0.65$) between review counts and subscriber volume, confirming severe popularity skew. In contrast, course duration exhibited negligible correlation with subscriber engagement ($r = 0.16$), and pricing tier showed near-zero correlation ($r = 0.05$). To counteract this Matthew effect \cite{liu2021matthew}, SmartRecSys regularizes popularity bias through sublinear TF-IDF scaling and domain affinity gating.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/correlation_matrix.png}
+\includegraphics[width=0.85\linewidth]{correlation_matrix}
 \caption{Feature correlation heatmap across 3,672 curricular courses, illustrating strong collinearity between review counts and subscriber volume ($r=0.65$), justifying popularity debiasing.}
 \label{fig:correlation}
 \end{figure}
@@ -238,7 +249,7 @@ Matrix Factorization (Truncated SVD, $k=12$) & 0.0012 & 0.0037 & 0.0012 & 0.0062
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{figures/evaluation_comparison.png}
+\includegraphics[width=\linewidth]{evaluation_comparison}
 \caption{6-Fold Cross-Validation metric comparison across Content-Based, Collaborative Filtering, SVD Matrix Factorization, and SmartRecSys Deep Hybrid.}
 \label{fig:evaluation}
 \end{figure}
@@ -273,7 +284,7 @@ To validate real-world academic advising efficacy, four standardized student coh
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{figures/dashboard_output.png}
+\includegraphics[width=\linewidth]{dashboard_output}
 \caption{Live SmartRecSys Web Dashboard interface snapshot displaying empirical recommendation cards, dynamic match confidence percentages (75\%--76\%), verified skills extraction tags, and human-interpretable pedagogical XAI explanations for zero-history cold-start students.}
 \label{fig:dashboard}
 \end{figure}

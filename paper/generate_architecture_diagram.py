@@ -92,10 +92,16 @@ def draw_system_architecture():
     arrow(6.7, 1.15, 7.3, 1.15, "Ranked Permutation")
 
     plt.tight_layout()
-    output_path = "paper/figures/system_architecture.png"
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    import os
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    fig_dir = os.path.join(base_dir, "figures")
+    os.makedirs(fig_dir, exist_ok=True)
+    png_path = os.path.join(fig_dir, "system_architecture.png")
+    pdf_path = os.path.join(fig_dir, "system_architecture.pdf")
+    plt.savefig(png_path, dpi=300, bbox_inches='tight')
+    plt.savefig(pdf_path, bbox_inches='tight')
     plt.close()
-    print(f"✅ Generated high-resolution system architecture flowchart at '{output_path}'")
+    print(f"✅ Generated architecture flowchart at:\n   {png_path}\n   {pdf_path}")
 
 if __name__ == "__main__":
     draw_system_architecture()

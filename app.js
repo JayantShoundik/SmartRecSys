@@ -33,6 +33,10 @@ async function fetchRecommendations(userName, preferences) {
   
   if (data.student_id) {
     lastStudentId = data.student_id;
+    localStorage.setItem("srs_student_id", data.student_id);
+    if (document.getElementById("cardStudentId")) {
+      document.getElementById("cardStudentId").textContent = `#SRS-${String(data.student_id).padStart(4, '0')}`;
+    }
   }
   if (data.active_model && document.getElementById("activeModelBadge")) {
     document.getElementById("activeModelBadge").textContent = data.active_model;
@@ -212,6 +216,97 @@ document.addEventListener("DOMContentLoaded", () => {
       if (resolvedDomains.includes(cb.value)) cb.checked = true;
     });
   }
+
+  // Populate persistent student profile card & session portal
+  let sessionStudent = null;
+  try {
+    const raw = localStorage.getItem("srs_session_student");
+    if (raw) sessionStudent = JSON.parse(raw);
+  } catch (e) {}
+
+  const dept = params.get("dept") || (sessionStudent && sessionStudent.department) || "Computer Science";
+  const degree = params.get("degree") || (sessionStudent && sessionStudent.degree) || "B.Tech (4-Year)";
+  const sem = params.get("semester") || (sessionStudent && sessionStudent.semester) || "3";
+  const goal = params.get("goal") || (sessionStudent && sessionStudent.career_goal) || "Software Engineer";
+  const roll = params.get("roll") || (sessionStudent && sessionStudent.roll_number) || `2023CS${String(studentId).padStart(4, '0')}`;
+  const cgpa = params.get("cgpa") || (sessionStudent && sessionStudent.cgpa);
+  const studentId = (sessionStudent && sessionStudent.id) || localStorage.getItem("srs_student_id") || "1";
+
+  if (document.getElementById("cardStudentName")) {
+    document.getElementById("cardStudentName").textContent = name;
+    document.getElementById("cardStudentId").textContent = `#SRS-${String(studentId).padStart(4, '0')}`;
+    document.getElementById("cardStudentDept").textContent = `${dept} • ${degree} • Semester ${sem}`;
+    document.getElementById("cardCareerGoal").textContent = goal;
+
+    if (document.getElementById("cardRollNumber")) {
+      document.getElementById("cardRollNumber").textContent = `Roll: ${roll}`;
+    }
+    if (document.getElementById("cardCgpaBadge")) {
+      document.getElementById("cardCgpaBadge").textContent = cgpa ? `CGPA: ${Number(cgpa).toFixed(2)}` : 'CGPA: Enrolled';
+    }
+  }
+
+  // Audit History drawer toggle
+  const toggleBtn = document.getElementById("btnToggleHistory");
+  const auditDrawer = document.getElementById("auditDrawer");
+  if (toggleBtn && auditDrawer) {
+    toggleBtn.addEventListener("click", () => {
+      const open = auditDrawer.style.display !== "none";
+      auditDrawer.style.display = open ? "none" : "block";
+      toggleBtn.style.background = open ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.25)";
+    });
+  }
+
+  // Card Logout button
+  const cardLogoutBtn = document.getElementById("cardLogoutBtn");
+  if (cardLogoutBtn) {
+    cardLogoutBtn.addEventListener("click", async () => {
+      try {
+        await fetch("http://127.0.0.1:5001/api/auth/logout", { method: "POST" });
+      } catch (e) {}
+      localStorage.removeItem("srs_session_student");
+      localStorage.removeItem("srs_token");
+      localStorage.removeItem("srs_student_id");
+      localStorage.removeItem("srs_student_name");
+      sessionStorage.clear();
+      window.location.href = "login.html";
+    });
+  }
+
+  // Load audit history from SQLite API
+  async function loadStudentAudits(sid) {
+    try {
+      const res = await fetch(`http://127.0.0.1:5001/api/students/${sid}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.student && data.student.audit_history) {
+        const history = data.student.audit_history;
+        const countSpan = document.getElementById("auditCount");
+        if (countSpan) countSpan.textContent = history.length;
+
+        const listDiv = document.getElementById("auditList");
+        if (listDiv && history.length > 0) {
+          listDiv.innerHTML = history.map(h => `
+            <div style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; padding:10px 14px;">
+              <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#a5b4fc; margin-bottom:4px;">
+                <span>Audit #${h.audit_id}</span>
+                <span>${h.date}</span>
+              </div>
+              <div style="font-size:0.84rem; font-weight:600; color:#fff; margin-bottom:4px;">
+                🎯 ${h.query_domains} (${h.query_difficulty})
+              </div>
+              <div style="font-size:0.75rem; color:#cbd5e1;">
+                Top: ${h.top_courses.map(c => c.title).slice(0, 2).join(' • ')}
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch student audit history:", e);
+    }
+  }
+  loadStudentAudits(studentId);
 
   // Pre-fill difficulty from URL params
   const urlLevel = params.get("level") || "";

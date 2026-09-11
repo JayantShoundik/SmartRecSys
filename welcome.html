@@ -14,11 +14,12 @@
   <nav class="topnav">
     <a href="welcome.html" class="nav-logo">SmartRecSys</a>
     <ul class="nav-links">
-      <li><a href="welcome.html"  class="nav-link" data-page="welcome">Welcome</a></li>
-      <li><a href="home.html"     class="nav-link" data-page="home">Home</a></li>
-      <li><a href="about.html"    class="nav-link" data-page="about">About</a></li>
-      <li><a href="docs.html"     class="nav-link" data-page="docs">Docs</a></li>
+      <li><a href="welcome.html"   class="nav-link" data-page="welcome">Welcome</a></li>
+      <li><a href="login.html"     class="nav-link" data-page="login">Student Portal</a></li>
+      <li><a href="home.html"      class="nav-link" data-page="home">Profile Intake</a></li>
       <li><a href="dashboard.html" class="nav-link" data-page="dashboard">Recommender</a></li>
+      <li><a href="about.html"     class="nav-link" data-page="about">About</a></li>
+      <li><a href="docs.html"      class="nav-link" data-page="docs">Docs</a></li>
     </ul>
   </nav>
 
@@ -32,7 +33,10 @@
         preferences to surface the courses most relevant to where you want to go — not
         just what's popular.
       </p>
-      <a href="home.html" class="btn-hero">Get Started →</a>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="login.html" id="heroStartBtn" class="btn-hero">Student Portal & Login →</a>
+        <a href="home.html" style="background: rgba(255,255,255,0.85); color: var(--indigo); padding: 13px 24px; border-radius: 10px; font-weight: 600; text-decoration: none; border: 1px solid var(--border); display: inline-flex; align-items: center;">Guest Intake</a>
+      </div>
     </div>
     <div class="hero-visual" aria-hidden="true">
       <!-- Decorative ring cluster -->
@@ -108,8 +112,8 @@
               <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" stroke="var(--indigo)" stroke-width="1.7" stroke-linecap="round"/>
             </svg>
           </div>
-          <h3>Easy-to-use interface</h3>
-          <p>A clean, accessible form collects your profile in under two minutes. No account creation or login required.</p>
+          <h3>Campus Student Portal</h3>
+          <p>Secure student portal with academic profile persistence, SQLite session management, and instant recommendation access.</p>
         </div>
 
       </div>

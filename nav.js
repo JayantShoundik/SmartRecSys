@@ -4,9 +4,35 @@
 (function () {
   const page = window.location.pathname.split('/').pop();
   if (page === 'dashboard.html') {
-    const name = new URLSearchParams(window.location.search).get('name');
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get('name');
     if (!name || !name.trim()) {
-      window.location.replace('welcome.html');
+      // Check if student is logged in via persistent session
+      const savedStudent = localStorage.getItem('srs_session_student');
+      if (savedStudent) {
+        try {
+          const s = JSON.parse(savedStudent);
+          const newParams = new URLSearchParams({
+            name:              s.name || 'Student',
+            dept:              s.department || 'Computer Science',
+            degree:            s.degree || 'B.Tech (4-Year)',
+            batch:             s.year || '2nd Year',
+            semester:          String(s.semester || '3'),
+            cgpa:              s.cgpa !== null && s.cgpa !== undefined ? String(s.cgpa) : '',
+            completed_courses: s.completed_courses || '',
+            current_courses:   s.current_courses || '',
+            domains:           (s.domains || []).join(','),
+            level:             s.difficulty || 'Beginner',
+            goal:              s.career_goal || 'Software Engineer',
+            roll:              s.roll_number || ''
+          });
+          window.location.replace('dashboard.html?' + newParams.toString());
+          return;
+        } catch (e) {
+          console.warn('Invalid session JSON:', e);
+        }
+      }
+      window.location.replace('login.html');
     }
   }
 })();
@@ -20,9 +46,65 @@ document.addEventListener('DOMContentLoaded', function () {
     if (link.dataset.page === page) link.classList.add('nav-active');
   });
 
-  // ── Mobile hamburger ────────────────────────────────────────────────────────
+  // ── Global Navbar Auth Status ───────────────────────────────────────────────
   const nav = document.querySelector('.topnav');
-  if (!nav) return;
+  const linksList = nav ? nav.querySelector('.nav-links') : null;
+
+  if (linksList) {
+    const savedStudent = localStorage.getItem('srs_session_student');
+    const authLi = document.createElement('li');
+    authLi.className = 'nav-auth-item';
+    authLi.style.display = 'flex';
+    authLi.style.alignItems = 'center';
+    authLi.style.gap = '8px';
+    authLi.style.marginLeft = '12px';
+
+    if (savedStudent) {
+      try {
+        const student = JSON.parse(savedStudent);
+        const firstName = student.name ? student.name.split(' ')[0] : 'Student';
+        const deptShort = student.department ? (student.department === 'Computer Science' ? 'CS' : student.department === 'Information Technology' ? 'IT' : student.department) : '';
+
+        authLi.innerHTML = `
+          <a href="dashboard.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:var(--indigo-soft, #eceeff); color:var(--indigo, #4a55d0); font-size:0.82rem; font-weight:600; padding:4px 10px; border-radius:20px; border:1px solid #c7d2fe;">
+            <span>🎓</span> ${firstName} ${deptShort ? `(${deptShort})` : ''}
+          </a>
+          <button id="navLogoutBtn" type="button" style="background:transparent; border:1px solid var(--border, #e4e7f0); color:var(--ink-2, #454b6b); font-size:0.78rem; font-weight:600; padding:4px 9px; border-radius:6px; cursor:pointer; transition:all 0.15s;">
+            Logout
+          </button>
+        `;
+
+        linksList.appendChild(authLi);
+
+        const logoutBtn = authLi.querySelector('#navLogoutBtn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', async () => {
+            try {
+              await fetch('http://127.0.0.1:5001/api/auth/logout', { method: 'POST' });
+            } catch (err) {}
+            localStorage.removeItem('srs_session_student');
+            localStorage.removeItem('srs_token');
+            localStorage.removeItem('srs_student_id');
+            localStorage.removeItem('srs_student_name');
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+          });
+        }
+      } catch (e) {
+        linksList.innerHTML += `<li><a href="login.html" class="nav-link" data-page="login" style="font-weight:600; color:var(--indigo);">Portal Sign In</a></li>`;
+      }
+    } else {
+      authLi.innerHTML = `
+        <a href="login.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:var(--indigo, #4a55d0); color:#fff; font-size:0.84rem; font-weight:600; padding:5px 12px; border-radius:8px;">
+          Student Sign In →
+        </a>
+      `;
+      linksList.appendChild(authLi);
+    }
+  }
+
+  // ── Mobile hamburger ────────────────────────────────────────────────────────
+  if (!nav || !linksList) return;
 
   const btn = document.createElement('button');
   btn.className = 'nav-hamburger';
@@ -30,8 +112,6 @@ document.addEventListener('DOMContentLoaded', function () {
   btn.setAttribute('aria-expanded', 'false');
   btn.innerHTML = '<span></span><span></span><span></span>';
   nav.appendChild(btn);
-
-  const linksList = nav.querySelector('.nav-links');
 
   function closeMenu() {
     linksList.classList.remove('nav-open');

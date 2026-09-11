@@ -15,17 +15,34 @@
     <a href="welcome.html" class="nav-logo">SmartRecSys</a>
     <ul class="nav-links">
       <li><a href="welcome.html"   class="nav-link" data-page="welcome">Welcome</a></li>
+      <li><a href="login.html"     class="nav-link" data-page="login">Student Portal</a></li>
       <li><a href="home.html"      class="nav-link" data-page="home">Home</a></li>
+      <li><a href="dashboard.html" class="nav-link" data-page="dashboard">Recommender</a></li>
       <li><a href="about.html"     class="nav-link" data-page="about">About</a></li>
       <li><a href="docs.html"      class="nav-link" data-page="docs">Docs</a></li>
-      <li><a href="dashboard.html" class="nav-link" data-page="dashboard">Recommender</a></li>
     </ul>
   </nav>
 
   <div class="container">
     <div class="form-page-header">
       <h1>Your Academic Profile</h1>
-      <p class="subtitle">Fill in your details so we can generate recommendations that actually match your situation.</p>
+    <!-- Quick-Load Saved Profiles from SQLite Database -->
+    <div class="saved-profiles-panel" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 18px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:1.3rem;">💾</span>
+        <div>
+          <strong style="color:#0f172a; font-size:0.95rem;">Quick-Load Existing Student Profile</strong>
+          <p style="margin:0; font-size:0.82rem; color:#64748b;">Pick from saved campus profiles in SQLite database or enter a new student below.</p>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <select id="savedProfilesSelect" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.88rem; background:#fff; min-width:240px;">
+          <option value="">➕ Create / Enter New Profile</option>
+        </select>
+        <button type="button" id="loadProfileBtn" style="padding:8px 14px; background:#4f46e5; color:#fff; border:none; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+          Load Profile
+        </button>
+      </div>
     </div>
 
     <form id="profileForm" class="profile-form" novalidate>
@@ -345,34 +362,166 @@
       return valid;
     }
 
-    // ── Submit ───────────────────────────────────────────────────────────────
-    document.getElementById('profileForm').addEventListener('submit', function(e) {
+    // ── Quick-Load Saved Profiles from Database ─────────────────────────────
+    let savedStudentsList = [];
+
+    async function loadSavedProfilesDropdown() {
+      try {
+        const res = await fetch('http://127.0.0.1:5001/api/students');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.students && data.students.length) {
+          savedStudentsList = data.students;
+          const sel = document.getElementById('savedProfilesSelect');
+          sel.innerHTML = '<option value="">➕ Create / Enter New Profile</option>';
+          const seen = new Set();
+          data.students.forEach(s => {
+            const key = s.name.trim().toLowerCase();
+            if (!seen.has(key)) {
+              seen.add(key);
+              const opt = document.createElement('option');
+              opt.value = s.id;
+              opt.textContent = `${s.name} (${s.department} • Sem ${s.semester})`;
+              sel.appendChild(opt);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Could not fetch saved students:', err);
+      }
+    }
+    loadSavedProfilesDropdown();
+
+    function populateStudentProfile(student) {
+      if (!student) return;
+      document.getElementById('studentName').value = student.name || '';
+      if (student.department) document.getElementById('department').value = student.department;
+      if (student.degree) {
+        document.getElementById('degree').value = student.degree;
+        updateYears(student.degree);
+      }
+      if (student.year) {
+        document.getElementById('batch').value = student.year;
+        updateSemesters(student.year);
+      }
+      if (student.semester) {
+        document.getElementById('semester').value = student.semester;
+      }
+      if (student.cgpa !== null && student.cgpa !== undefined) {
+        document.getElementById('cgpa').value = student.cgpa;
+      }
+      if (student.completed_courses) {
+        document.getElementById('completedCourses').value = student.completed_courses;
+      }
+      if (student.current_courses) {
+        document.getElementById('currentCourses').value = student.current_courses;
+      }
+      if (student.career_goal) {
+        document.getElementById('careerGoal').value = student.career_goal;
+      }
+
+      // Check domains
+      const domains = student.domains || [];
+      document.querySelectorAll('[name="domainInterest"]').forEach(cb => {
+        cb.checked = domains.includes(cb.value);
+      });
+
+      // Check level
+      const level = student.difficulty || 'Beginner';
+      const rad = document.querySelector(`[name="level"][value="${level}"]`);
+      if (rad) rad.checked = true;
+
+      sessionStorage.setItem('srs_active_student_id', student.id);
+    }
+
+    document.getElementById('savedProfilesSelect').addEventListener('change', function() {
+      const id = this.value;
+      if (!id) {
+        document.getElementById('profileForm').reset();
+        sessionStorage.removeItem('srs_active_student_id');
+        return;
+      }
+      const found = savedStudentsList.find(s => String(s.id) === String(id));
+      if (found) populateStudentProfile(found);
+    });
+
+    document.getElementById('loadProfileBtn').addEventListener('click', function() {
+      const id = document.getElementById('savedProfilesSelect').value;
+      if (!id) {
+        alert('Please select an existing student profile from the dropdown.');
+        return;
+      }
+      const found = savedStudentsList.find(s => String(s.id) === String(id));
+      if (found) populateStudentProfile(found);
+    });
+
+    // ── Submit & Persist to Database ─────────────────────────────────────────
+    document.getElementById('profileForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       if (!validateForm()) return;
+
+      const submitBtn = document.querySelector('.btn-primary[type="submit"]');
+      const origText = submitBtn.textContent;
+      submitBtn.textContent = 'Saving Profile to Database...';
+      submitBtn.disabled = true;
+
+      const domains = [...document.querySelectorAll('[name="domainInterest"]:checked')].map(c => c.value);
+      const level = document.querySelector('[name="level"]:checked').value;
+      const activeId = sessionStorage.getItem('srs_active_student_id');
+
+      const profilePayload = {
+        id: activeId ? parseInt(activeId, 10) : undefined,
+        name: document.getElementById('studentName').value.trim(),
+        department: document.getElementById('department').value,
+        degree: document.getElementById('degree').value,
+        year: document.getElementById('batch').value,
+        semester: parseInt(document.getElementById('semester').value || '1', 10),
+        cgpa: document.getElementById('cgpa').value ? parseFloat(document.getElementById('cgpa').value) : null,
+        completed_courses: document.getElementById('completedCourses').value.trim(),
+        current_courses: document.getElementById('currentCourses').value.trim(),
+        domains: domains,
+        difficulty: level,
+        career_goal: document.getElementById('careerGoal').value
+      };
+
+      try {
+        const res = await fetch('http://127.0.0.1:5001/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(profilePayload)
+        });
+        if (res.ok) {
+          const resData = await res.json();
+          if (resData.student && resData.student.id) {
+            localStorage.setItem('srs_student_id', resData.student.id);
+            localStorage.setItem('srs_student_name', resData.student.name);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not persist profile to API, proceeding to dashboard:', err);
+      }
 
       // Save to sessionStorage for back-navigation preservation
       FIELDS.forEach(id => {
         const el = document.getElementById(id);
         if (el) sessionStorage.setItem('srs_' + id, el.value);
       });
-      const domains = [...document.querySelectorAll('[name="domainInterest"]:checked')].map(c => c.value);
       sessionStorage.setItem('srs_domainInterest', JSON.stringify(domains));
-      const level = document.querySelector('[name="level"]:checked').value;
       sessionStorage.setItem('srs_level', level);
 
       // Build query string with ALL parameters
       const params = new URLSearchParams({
-        name:              document.getElementById('studentName').value.trim(),
-        dept:              document.getElementById('department').value,
-        degree:            document.getElementById('degree').value,
-        batch:             document.getElementById('batch').value,
-        semester:          document.getElementById('semester').value,
-        cgpa:              document.getElementById('cgpa').value,
-        completed_courses: document.getElementById('completedCourses').value.trim(),
-        current_courses:   document.getElementById('currentCourses').value.trim(),
+        name:              profilePayload.name,
+        dept:              profilePayload.department,
+        degree:            profilePayload.degree,
+        batch:             profilePayload.year,
+        semester:          String(profilePayload.semester),
+        cgpa:              profilePayload.cgpa !== null ? String(profilePayload.cgpa) : '',
+        completed_courses: profilePayload.completed_courses,
+        current_courses:   profilePayload.current_courses,
         domains:           domains.join(','),
         level:             level,
-        goal:              document.getElementById('careerGoal').value,
+        goal:              profilePayload.career_goal,
       });
       window.location.href = 'dashboard.html?' + params.toString();
     });

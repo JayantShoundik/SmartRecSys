@@ -34,7 +34,55 @@
         <!-- Profile summary chips populated by app.js -->
         <div class="profile-chips" id="profileChips"></div>
       </div>
-      <a href="home.html" class="logout">← Edit Profile</a>
+      <a href="home.html" class="logout">← Switch / Edit Profile</a>
+    </div>
+
+    <!-- Persistent Student Profile Card -->
+    <div class="student-profile-card" id="studentProfileCard" style="background:linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color:#fff; border-radius:12px; padding:20px 24px; margin-bottom:24px; box-shadow:0 4px 14px rgba(49, 46, 129, 0.18);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div style="width:52px; height:52px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
+            🎓
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <h2 id="cardStudentName" style="margin:0; font-size:1.3rem; font-weight:700; color:#fff;">Student Profile</h2>
+              <span id="cardStudentId" style="background:rgba(255,255,255,0.2); padding:3px 8px; border-radius:20px; font-size:0.75rem; font-family:monospace; color:#e0e7ff;">#SRS-0000</span>
+              <span id="cardRollNumber" style="background:rgba(255,255,255,0.15); padding:3px 8px; border-radius:20px; font-size:0.75rem; font-family:monospace; color:#fef08a;">Roll: 2023CS0142</span>
+              <span id="cardCgpaBadge" style="background:rgba(16, 185, 129, 0.25); border:1px solid #10b981; color:#a7f3d0; padding:2px 8px; border-radius:12px; font-size:0.72rem; font-weight:600;">CGPA: 9.10</span>
+              <span style="background:#10b981; color:#fff; padding:2px 8px; border-radius:12px; font-size:0.72rem; font-weight:600;">SQLite Verified</span>
+            </div>
+            <p id="cardStudentDept" style="margin:5px 0 0 0; font-size:0.88rem; color:#c7d2fe;">
+              Computer Science • B.Tech (4-Year) • Semester 3
+            </p>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <div style="text-align:right; margin-right:8px;">
+            <div style="font-size:0.72rem; color:#a5b4fc; text-transform:uppercase; letter-spacing:0.5px;">Declared Career Goal</div>
+            <div id="cardCareerGoal" style="font-size:0.92rem; font-weight:600; color:#fff;">Software Engineer</div>
+          </div>
+          <button id="btnToggleHistory" type="button" style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:8px 12px; border-radius:8px; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+            📜 History (<span id="auditCount">0</span>)
+          </button>
+          <a href="home.html" style="background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); color:#fff; padding:8px 13px; border-radius:8px; font-size:0.82rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+            ✏️ Edit Profile
+          </a>
+          <button id="cardLogoutBtn" type="button" style="background:#ef4444; border:none; color:#fff; padding:8px 13px; border-radius:8px; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+            🚪 Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- Expandable Recommendation Audit Drawer -->
+      <div id="auditDrawer" style="display:none; margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.15);">
+        <h4 style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px; color:#a5b4fc; margin-bottom:8px;">
+          Saved Recommendation Audits in SQLite
+        </h4>
+        <div id="auditList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px;">
+          <p style="font-size:0.85rem; color:#c7d2fe;">No prior recommendation logs recorded yet.</p>
+        </div>
+      </div>
     </div>
 
     <!-- Feature strip -->

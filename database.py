@@ -14,6 +14,9 @@ class Student(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
+    email = Column(String(120), unique=True, nullable=True, index=True)
+    password_hash = Column(String(255), nullable=True)
+    roll_number = Column(String(50), nullable=True, index=True)
     department = Column(String(100), nullable=False)
     degree = Column(String(100), nullable=False)
     year = Column(String(50), nullable=False)
@@ -56,8 +59,63 @@ class RecommendationAudit(Base):
 
     student = relationship("Student", back_populates="recommendations")
 
+def migrate_db():
+    """Safely adds authentication columns to students table if not present, and sets demo credentials."""
+    import sqlite3
+    import re
+    from werkzeug.security import generate_password_hash
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(students)")
+    columns = [col[1] for col in cursor.fetchall()]
+
+    if "email" not in columns:
+        cursor.execute("ALTER TABLE students ADD COLUMN email VARCHAR(120)")
+    if "password_hash" not in columns:
+        cursor.execute("ALTER TABLE students ADD COLUMN password_hash VARCHAR(255)")
+    if "roll_number" not in columns:
+        cursor.execute("ALTER TABLE students ADD COLUMN roll_number VARCHAR(50)")
+    conn.commit()
+    conn.close()
+
+    session = SessionLocal()
+    try:
+        students = session.query(Student).all()
+        default_hash = generate_password_hash("password123")
+        for s in students:
+            updated = False
+            if not s.password_hash:
+                s.password_hash = default_hash
+                updated = True
+            if not s.roll_number:
+                s.roll_number = f"2023CS{s.id:04d}"
+                updated = True
+            if not s.email:
+                clean_name = re.sub(r'[^a-zA-Z0-9]+', '.', s.name.strip().lower())
+                s.email = f"{clean_name}@campus.edu"
+                updated = True
+            # Special well-known accounts for easy demo
+            if "devansh" in s.name.lower():
+                s.email = "devansh@campus.edu"
+                s.roll_number = "2023CS0142"
+                s.password_hash = default_hash
+                updated = True
+            elif "ujjwal" in s.name.lower():
+                s.email = "ujjwal@campus.edu"
+                s.roll_number = "2023CS0118"
+                s.password_hash = default_hash
+                updated = True
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(f"⚠️ DB Migration notice: {e}")
+    finally:
+        session.close()
+
 def init_db(dataset_csv="dataset/udemy_courses.csv"):
     Base.metadata.create_all(bind=engine)
+    migrate_db()
     session = SessionLocal()
     
     # Check if catalog already populated
@@ -85,3 +143,4 @@ def init_db(dataset_csv="dataset/udemy_courses.csv"):
 
 if __name__ == "__main__":
     init_db()
+

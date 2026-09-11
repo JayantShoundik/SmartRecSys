@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartRecSys — Student Portal Login & Registration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .auth-wrapper {
+      max-width: 680px;
+      margin: 24px auto 60px;
+      padding: 0 16px;
+    }
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(17, 22, 46, 0.08);
+      overflow: hidden;
+    }
+    .auth-header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      color: #fff;
+      padding: 32px 32px 24px;
+      text-align: center;
+      position: relative;
+    }
+    .auth-header h1 {
+      color: #fff;
+      font-size: 1.75rem;
+      margin-bottom: 6px;
+    }
+    .auth-header p {
+      color: #c7d2fe;
+      font-size: 0.92rem;
+      margin: 0;
+    }
+    .auth-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #e0e7ff;
+      margin-bottom: 12px;
+    }
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: #f8fafc;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 14px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--ink-2);
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .auth-tab:hover {
+      color: var(--indigo);
+      background: rgba(74, 85, 208, 0.04);
+    }
+    .auth-tab.active {
+      color: var(--indigo);
+      background: #fff;
+      border-bottom-color: var(--indigo);
+    }
+    .auth-body {
+      padding: 32px;
+    }
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      max-width: 100%;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+      .auth-body { padding: 20px; }
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+    .form-control {
+      font-family: var(--font-body);
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: var(--surface);
+      color: var(--ink);
+      width: 100%;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(74, 85, 208, 0.18);
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      background: var(--indigo);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .btn-submit:hover {
+      background: var(--indigo-hover);
+    }
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .auth-alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .auth-alert.error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      display: block;
+    }
+    .auth-alert.success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      display: block;
+    }
+    .quick-demo-box {
+      margin-top: 24px;
+      padding: 18px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+    }
+    .quick-demo-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--ink-2);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .demo-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .demo-chip-btn {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .demo-chip-btn:hover {
+      border-color: var(--indigo);
+      background: var(--indigo-soft);
+      color: var(--indigo);
+      transform: translateY(-1px);
+    }
+    .demo-chip-btn .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    .section-divider {
+      border-top: 1px solid var(--border);
+      margin: 16px 0;
+      position: relative;
+      text-align: center;
+    }
+    .section-divider span {
+      position: relative;
+      top: -10px;
+      background: #fff;
+      padding: 0 12px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+    }
+    .checkbox-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .checkbox-chip:hover {
+      border-color: var(--indigo);
+    }
+  </style>
+</head>
+<body class="page-login">
+
+  <!-- Navigation -->
+  <nav class="topnav">
+    <a href="welcome.html" class="nav-logo">SmartRecSys</a>
+    <ul class="nav-links">
+      <li><a href="welcome.html"   class="nav-link" data-page="welcome">Welcome</a></li>
+      <li><a href="login.html"     class="nav-link nav-active" data-page="login">Student Portal</a></li>
+      <li><a href="dashboard.html" class="nav-link" data-page="dashboard">Recommender</a></li>
+      <li><a href="about.html"     class="nav-link" data-page="about">About</a></li>
+      <li><a href="docs.html"      class="nav-link" data-page="docs">Docs</a></li>
+    </ul>
+  </nav>
+
+  <div class="container auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-badge">
+          <span>🎓</span> Smart Campus E-Learning Portal
+        </div>
+        <h1>Student Portal Access</h1>
+        <p>Sign in with your academic credentials or register a student profile.</p>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLoginBtn" type="button">Sign In</button>
+        <button class="auth-tab" id="tabRegisterBtn" type="button">Register New Student</button>
+      </div>
+
+      <div class="auth-body">
+        <div id="authAlert" class="auth-alert"></div>
+
+        <!-- ── TAB 1: SIGN IN FORM ── -->
+        <div id="loginTabContent">
+          <form id="loginForm" class="auth-form" onsubmit="return false;">
+            <div class="form-group">
+              <label for="loginIdentifier">Campus Email or Roll Number</label>
+              <input type="text" id="loginIdentifier" class="form-control" placeholder="e.g. devansh@campus.edu or 2023CS0142" required autocomplete="username" />
+            </div>
+
+            <div class="form-group">
+              <label for="loginPassword">Password</label>
+              <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" required autocomplete="current-password" />
+            </div>
+
+            <button type="submit" id="loginSubmitBtn" class="btn-submit">
+              <span>Sign In to Student Portal →</span>
+            </button>
+          </form>
+
+          <!-- Quick 1-Click Evaluation Login -->
+          <div class="quick-demo-box">
+            <div class="quick-demo-title">
+              <span>⚡ 1-Click Demo Logins (For Project Review & Grading)</span>
+            </div>
+            <div class="demo-chips">
+              <button type="button" class="demo-chip-btn" onclick="quickFillLogin('devansh@campus.edu', 'password123')">
+                <span class="dot"></span>
+                <strong>Devansh Sharma</strong> (CS • Cloud Security)
+              </button>
+              <button type="button" class="demo-chip-btn" onclick="quickFillLogin('ujjwal@campus.edu', 'password123')">
+                <span class="dot"></span>
+                <strong>Ujjwal Kishore Singh</strong> (CS • Cybersecurity)
+              </button>
+              <button type="button" class="demo-chip-btn" onclick="quickFillLogin('anya.roy@campus.edu', 'mypassword456')">
+                <span class="dot"></span>
+                <strong>Anya Roy</strong> (CS • Machine Learning)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TAB 2: REGISTRATION FORM ── -->
+        <div id="registerTabContent" style="display: none;">
+          <form id="registerForm" class="auth-form" onsubmit="return false;">
+            
+            <div class="section-divider">
+              <span>1. Account Credentials</span>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="regName">Full Name *</label>
+                <input type="text" id="regName" class="form-control" placeholder="e.g. Rohan Verma" required />
+              </div>
+              <div class="form-group">
+                <label for="regEmail">Campus Email *</label>
+                <input type="email" id="regEmail" class="form-control" placeholder="e.g. rohan.verma@campus.edu" required />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="regPassword">Password *</label>
+                <input type="password" id="regPassword" class="form-control" placeholder="Create password (min 4 chars)" required minlength="4" />
+              </div>
+              <div class="form-group">
+                <label for="regRoll">Campus Roll Number</label>
+                <input type="text" id="regRoll" class="form-control" placeholder="e.g. 2023CS0210 (optional)" />
+              </div>
+            </div>
+
+            <div class="section-divider">
+              <span>2. Academic Profile</span>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="regDept">Department *</label>
+                <select id="regDept" class="form-control">
+                  <option value="Computer Science">Computer Science</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Electronics & Communication">Electronics & Communication</option>
+                  <option value="Multimedia Design">Multimedia Design</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="regDegree">Degree Track *</label>
+                <select id="regDegree" class="form-control">
+                  <option value="B.Tech (4-Year)">B.Tech (4-Year)</option>
+                  <option value="BS (4-Year)">BS (4-Year)</option>
+                  <option value="BCA (3-Year)">BCA (3-Year)</option>
+                  <option value="M.Tech (2-Year)">M.Tech (2-Year)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="regSemester">Current Semester *</label>
+                <select id="regSemester" class="form-control">
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                  <option value="3" selected>Semester 3</option>
+                  <option value="4">Semester 4</option>
+                  <option value="5">Semester 5</option>
+                  <option value="6">Semester 6</option>
+                  <option value="7">Semester 7</option>
+                  <option value="8">Semester 8</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="regCgpa">Cumulative CGPA (0.00 - 10.00)</label>
+                <input type="number" id="regCgpa" class="form-control" step="0.01" min="0" max="10" placeholder="e.g. 8.65" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regCompleted">Completed Coursework / Prerequisites</label>
+              <input type="text" id="regCompleted" class="form-control" placeholder="e.g. Data Structures, Python, Discrete Mathematics" />
+            </div>
+
+            <div class="form-group">
+              <label for="regCareerGoal">Declared Career Goal</label>
+              <select id="regCareerGoal" class="form-control">
+                <option value="Software Engineer">Software Engineer</option>
+                <option value="Cloud Security Architect">Cloud Security Architect</option>
+                <option value="Machine Learning Engineer">Machine Learning Engineer</option>
+                <option value="Data Scientist">Data Scientist</option>
+                <option value="Full Stack Developer">Full Stack Developer</option>
+                <option value="DevOps / Cloud Engineer">DevOps / Cloud Engineer</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Domain Interests (Choose at least one)</label>
+              <div class="checkbox-grid">
+                <label class="checkbox-chip"><input type="checkbox" name="regDomain" value="Web Development" checked /> Web Development</label>
+                <label class="checkbox-chip"><input type="checkbox" name="regDomain" value="Programming" checked /> Programming</label>
+                <label class="checkbox-chip"><input type="checkbox" name="regDomain" value="Data Science" /> Data Science</label>
+                <label class="checkbox-chip"><input type="checkbox" name="regDomain" value="Machine Learning" /> Machine Learning</label>
+                <label class="checkbox-chip"><input type="checkbox" name="regDomain" value="Cybersecurity" /> Cybersecurity</label>
+                <label class="checkbox-chip"><input type="checkbox" name="regDomain" value="Cloud Computing" /> Cloud Computing</label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regDifficulty">Preferred Course Difficulty</label>
+              <select id="regDifficulty" class="form-control">
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate" selected>Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+
+            <button type="submit" id="regSubmitBtn" class="btn-submit">
+              <span>Register Account & Enter Portal →</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-copy">
+        <p><strong>SmartRecSys</strong> — Hybrid E-Learning Recommendation Engine for University Campuses.</p>
+        <p class="sub">SQLite Persisted • Neural Matrix Factorization & TF-IDF Vectors</p>
+      </div>
+      <ul class="footer-nav">
+        <li><a href="welcome.html">Welcome</a></li>
+        <li><a href="dashboard.html">Recommender</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="docs.html">Docs</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="nav.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
