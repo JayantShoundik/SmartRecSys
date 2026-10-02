@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const deptShort = student.department ? (student.department === 'Computer Science' ? 'CS' : student.department === 'Information Technology' ? 'IT' : student.department) : '';
 
         authLi.innerHTML = `
-          <a href="dashboard.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:var(--indigo-soft, #eceeff); color:var(--indigo, #4a55d0); font-size:0.82rem; font-weight:600; padding:4px 10px; border-radius:20px; border:1px solid #c7d2fe;">
+          <a href="profile.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:var(--indigo-soft, #eceeff); color:var(--indigo, #4a55d0); font-size:0.82rem; font-weight:600; padding:4px 10px; border-radius:20px; border:1px solid #c7d2fe;">
             <span>🎓</span> ${firstName} ${deptShort ? `(${deptShort})` : ''}
           </a>
           <button id="navLogoutBtn" type="button" style="background:transparent; border:1px solid var(--border, #e4e7f0); color:var(--ink-2, #454b6b); font-size:0.78rem; font-weight:600; padding:4px 9px; border-radius:6px; cursor:pointer; transition:all 0.15s;">

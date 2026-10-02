@@ -60,6 +60,7 @@ function buildCard(course, animIndex, showBadge) {
     ${showBadge ? '<span class="badge-top">Top Match</span>' : ''}
     <div class="card-title">${course.title}</div>
     <div class="tags">
+      ${course.institution ? `<span class="tag" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.25); font-weight: 600;">🏛️ ${course.institution}</span>` : ''}
       <span class="tag">${course.domain}</span>
       <span class="tag ${course.difficulty.toLowerCase()}">${course.difficulty}</span>
       ${course.duration ? `<span class="tag tag-duration">${course.duration}</span>` : ''}

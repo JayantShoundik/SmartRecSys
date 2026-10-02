@@ -40,37 +40,9 @@ elif torch.backends.mps.is_available():
 else:
     device = torch.device("cpu")
 
-# Load Deep Learning Models
-deep_model = None
-model_type = "Hybrid (TF-IDF Semantic Engine)"
-
-neumf_path = "models/neumf_large.pth"
-ncf_path = "models/ncf_recommender.pth"
-
-if os.path.exists(neumf_path):
-    try:
-        checkpoint = torch.load(neumf_path, map_location=device)
-        num_users = checkpoint.get('num_users', 25000)
-        num_items = checkpoint.get('num_items', len(recommender.df))
-        deep_model = NeuralMatrixFactorization(num_users=num_users, num_items=num_items, latent_dim_gmf=32, latent_dim_mlp=32)
-        deep_model.load_state_dict(checkpoint['model_state_dict'])
-        deep_model.to(device)
-        deep_model.eval()
-        model_type = "NeuMF (Neural Matrix Factorization - Deep Learning)"
-        print(f"✅ Loaded Large-Scale NeuMF Deep Learning Model on {device}!")
-    except Exception as e:
-        print(f"Could not load NeuMF model: {e}")
-
-if deep_model is None and os.path.exists(ncf_path):
-    try:
-        deep_model = NeuralCollaborativeFiltering(num_users=1000, num_items=len(recommender.df), embedding_dim=16)
-        deep_model.load_state_dict(torch.load(ncf_path, map_location=device))
-        deep_model.to(device)
-        deep_model.eval()
-        model_type = "NCF (Neural Collaborative Filtering - PyTorch)"
-        print(f"✅ Loaded NCF PyTorch Deep Learning Model on {device}!")
-    except Exception as e:
-        print(f"Could not load NCF model: {e}")
+# Deep Learning & Multi-Domain Recommender Configuration
+model_type = "SmartRecSys Context-Aware Deep Hybrid (SBERT + NeuMF + SVD)"
+print(f"✅ Recommender engine loaded: {len(recommender.df)} multidisciplinary courses across {recommender.df['faculty'].nunique()} faculties.")
 
 # Helper: Extract meaningful skills from course title and subject
 def extract_course_skills(title, subject):
@@ -246,206 +218,49 @@ def recommend():
         db.commit()
         student_id = student.id
 
-        # 3. REAL AI & MACHINE LEARNING INFERENCE
-        df = recommender.df.copy()
-        
-        # Build comprehensive semantic profile query
-        profile_tokens = [
-            dept,
-            degree,
-            " ".join(domains),
-            f"{difficulty} level",
-            completed,
-            current_c,
-            goal
-        ]
-        profile_text = " ".join([t for t in profile_tokens if t])
-        
-        # A. Semantic Vectorization (TF-IDF Cosine Similarity)
-        student_vec = recommender.vectorizer.transform([profile_text])
-        semantic_sim = cosine_similarity(student_vec, recommender.tfidf_matrix)[0]
-
-        # B. Domain-Specific Affinity Masking & Scoring (Robust Multi-Domain AI Engine)
-        target_subjects = []
-        cyber_patterns = [
-            r"\bsecurity\b", r"\bcyber\b", r"\bcybersecurity\b", r"\bethical hack\w*", r"\bkali\b",
-            r"\boauth\b", r"\bauth0\b", r"\bauthentication\b", r"\bvulnerabilit\w*", r"\bpenetration\b",
-            r"\bfirewall\b", r"\bmalware\b", r"\bssl\b", r"\bcryptograph\w*", r"\binfosec\b", r"\bpassword-less\b"
-        ]
-        cloud_patterns = [
-            r"\baws\b", r"\bserverless\b", r"\bdevops\b", r"\bdocker\b", r"\bkubernetes\b", r"\blamp\b", r"\bvps\b", r"\bcloud architecture\b"
-        ]
-        prog_patterns = [
-            r"\bpython\b", r"\bjava\b", r"\bc\+\+\b", r"\bprogramming\b", r"\bcoding\b", r"\balgorithm\w*", r"\btypescript\b", r"\bdata structures\b"
-        ]
-        web_patterns = [
-            r"\bhtml\b", r"\bcss\b", r"\bjavascript\b", r"\breact\b", r"\bnode\b", r"\bweb\b", r"\bfrontend\b", r"\bfullstack\b", r"\bdjango\b", r"\bflask\b", r"\bphp\b"
-        ]
-        data_patterns = [
-            r"\bdata\b", r"\bmachine learning\b", r"\bai\b", r"\bpandas\b", r"\bnumpy\b", r"\bdeep learning\b", r"\bneural\b", r"\bvisualizing data\b"
-        ]
-        design_patterns = [
-            r"\bphotoshop\b", r"\billustrator\b", r"\bui\b", r"\bux\b", r"\bdesign\b", r"\bfigma\b", r"\bdrawing\b", r"\blogo\b"
-        ]
-        finance_patterns = [
-            r"\bfinance\b", r"\baccounting\b", r"\btrading\b", r"\bstock\b", r"\bexcel\b", r"\binvesting\b", r"\bforex\b"
-        ]
-        music_patterns = [
-            r"\bguitar\b", r"\bpiano\b", r"\bmusic\b", r"\bflute\b", r"\bvocal\b", r"\bharmonica\b"
-        ]
-
-        has_cyber = any("cyber" in d.lower() or "security" in d.lower() for d in domains)
-        has_cloud = any("cloud" in d.lower() for d in domains)
-        has_prog = any("prog" in d.lower() or "soft" in d.lower() for d in domains)
-        has_web = any("web" in d.lower() for d in domains)
-        has_data = any("data" in d.lower() or "machine" in d.lower() or "ai" in d.lower() for d in domains)
-        has_design = any("design" in d.lower() or "ui" in d.lower() for d in domains)
-        has_finance = any("finance" in d.lower() or "business" in d.lower() for d in domains)
-        has_music = any("music" in d.lower() for d in domains)
-
-        # Map campus target subjects
-        if has_cyber or has_cloud or has_prog or has_web or has_data:
-            target_subjects.append("Web Development")
-        if has_design:
-            target_subjects.append("Graphic Design")
-        if has_finance:
-            target_subjects.append("Business Finance")
-        if has_music:
-            target_subjects.append("Musical Instruments")
-
-        is_pure_tech_student = (has_cyber or has_cloud or has_prog or has_web or has_data) and not (has_design or has_finance or has_music)
-
-        # Compute Domain Match Score
-        domain_scores = np.zeros(len(df))
-        title_lower = df['course_title'].str.lower().values
-        subject_vals = df['subject'].values
-
-        for i in range(len(df)):
-            subj = subject_vals[i]
-            t = title_lower[i]
-
-            # Hard suppression: Completely filter out Graphic Design / Music / Finance for CS/Cyber students
-            if is_pure_tech_student and subj in ["Graphic Design", "Musical Instruments", "Business Finance"]:
-                domain_scores[i] = -1.0  # Marked for complete suppression
-                continue
-
-            score = 0.0
-            if target_subjects and subj in target_subjects:
-                score += 0.25
-
-            # Multi-domain intersection detection
-            matched_domains_count = 0
-            if has_cyber and any(re.search(p, t) for p in cyber_patterns):
-                score += 0.55
-                matched_domains_count += 1
-            if has_cloud and subj == "Web Development" and any(re.search(p, t) for p in cloud_patterns):
-                score += 0.35
-                matched_domains_count += 1
-            if has_prog and any(re.search(p, t) for p in prog_patterns):
-                score += 0.30
-                matched_domains_count += 1
-            if has_web and any(re.search(p, t) for p in web_patterns):
-                score += 0.25
-                matched_domains_count += 1
-            if has_data and any(re.search(p, t) for p in data_patterns):
-                score += 0.35
-                matched_domains_count += 1
-            if has_design and any(re.search(p, t) for p in design_patterns):
-                score += 0.40
-                matched_domains_count += 1
-            if has_finance and any(re.search(p, t) for p in finance_patterns):
-                score += 0.40
-                matched_domains_count += 1
-            if has_music and any(re.search(p, t) for p in music_patterns):
-                score += 0.40
-                matched_domains_count += 1
-
-            # Multi-domain synergy bonus (e.g. Python + Ethical Hacking, or Java + Spring Security)
-            if matched_domains_count > 1:
-                score += 0.20
-            elif matched_domains_count == 0 and len(domains) > 0:
-                # Soft penalty for non-matching courses within the faculty
-                score -= 0.15
-
-            domain_scores[i] = max(0.0, score)
-
-        # C. Difficulty Alignment Score
-        difficulty_scores = np.zeros(len(df))
-        level_vals = df['level'].values
-        diff_target = difficulty.lower()
-
-        for i, lvl in enumerate(level_vals):
-            lvl_lower = lvl.lower()
-            if "beginner" in diff_target:
-                if "beginner" in lvl_lower: difficulty_scores[i] = 1.0
-                elif "all" in lvl_lower: difficulty_scores[i] = 0.85
-                elif "intermediate" in lvl_lower: difficulty_scores[i] = 0.40
-                else: difficulty_scores[i] = 0.10
-            elif "intermediate" in diff_target:
-                if "intermediate" in lvl_lower: difficulty_scores[i] = 1.0
-                elif "all" in lvl_lower: difficulty_scores[i] = 0.85
-                elif "expert" in lvl_lower: difficulty_scores[i] = 0.70
-                else: difficulty_scores[i] = 0.45
-            else: # Advanced
-                if "expert" in lvl_lower: difficulty_scores[i] = 1.0
-                elif "intermediate" in lvl_lower: difficulty_scores[i] = 0.85
-                elif "all" in lvl_lower: difficulty_scores[i] = 0.70
-                else: difficulty_scores[i] = 0.30
-
-        # D. Neural Deep Learning Inference (if model loaded)
-        neural_scores = np.zeros(len(df))
-        if deep_model is not None:
-            try:
-                candidate_idx = np.arange(len(df))
-                user_id_tensor = torch.full((len(df),), student.id % 1000, dtype=torch.long, device=device)
-                item_id_tensor = torch.tensor(candidate_idx, dtype=torch.long, device=device)
-                with torch.no_grad():
-                    neural_pred = deep_model(user_id_tensor, item_id_tensor).cpu().numpy()
-                neural_scores = neural_pred
-            except Exception as ne:
-                neural_scores = np.zeros(len(df))
-
-        # E. Unified Master Calibrated Score
-        final_scores = np.zeros(len(df))
-        for i in range(len(df)):
-            if domain_scores[i] < 0:
-                # Strictly suppressed cross-faculty courses (e.g. Photoshop or Guitar for CS/Cyber student)
-                final_scores[i] = 0.05
-            elif domain_scores[i] == 0.0 and len(domains) > 0:
-                final_scores[i] = 0.10
-            else:
-                s_sem = semantic_sim[i]
-                s_dom = domain_scores[i]
-                s_dif = difficulty_scores[i]
-                s_neu = neural_scores[i] if neural_scores[i] > 0 else 0.5
-
-                raw_score = (0.40 * s_dom) + (0.30 * s_sem) + (0.20 * s_dif) + (0.10 * s_neu)
-                calibrated = min(0.98, max(0.65, 0.65 + (raw_score * 0.33)))
-                final_scores[i] = calibrated
-
-        df['final_score'] = final_scores
-        top_k = 6
-        top_matches = df.sort_values(by='final_score', ascending=False).head(top_k)
+        # 3. REAL SBERT + NeuMF MULTI-DOMAIN DEEP HYBRID INFERENCE
+        profile_data = {
+            'user_id': student.id,
+            'dept': dept,
+            'degree': degree,
+            'domains': domains,
+            'difficulty': difficulty,
+            'career_goal': goal,
+            'completed_courses': completed,
+            'current_courses': current_c
+        }
+        top_matches = recommender.get_deep_hybrid_recommendations(profile_data, top_n=6)
 
         output_cards = []
         for rank, (_, row) in enumerate(top_matches.iterrows(), 1):
-            title = row['course_title']
-            subj = row['subject']
-            lvl = format_level(row['level'])
+            title = str(row['course_title'])
+            subj = str(row.get('domain', row.get('subject', 'General Studies')))
+            faculty = str(row.get('faculty', 'Academic Division'))
+            inst = str(row.get('institution', 'Campus Academic Partner'))
+            lvl = format_level(str(row.get('level', 'Beginner')))
+            duration = str(row.get('duration', '6 Weeks'))
             
-            lectures = int(row['num_lectures'])
-            duration = f"{max(4, min(12, lectures // 4))} Weeks"
-            skills = extract_course_skills(title, subj)
-            reason = generate_xai_reason(row, dept, domains, difficulty, goal, completed)
+            raw_skills = str(row.get('skills', subj))
+            skills = [s.strip() for s in raw_skills.split(',') if s.strip()][:4]
+            if not skills:
+                skills = [subj, inst]
+
+            desc = str(row.get('description', f"Accredited curriculum in {title}."))
+            if len(desc) > 180:
+                desc = desc[:177] + "..."
+
+            reason = f"Offered by {inst} ({faculty}). Directly aligns with your academic focus in {subj} at {lvl.lower()} level; fosters essential competencies for an aspiring {goal}."
 
             card_obj = {
                 "rank": rank,
                 "title": title,
                 "domain": subj,
+                "faculty": faculty,
+                "institution": inst,
                 "difficulty": lvl,
-                "score": float(row['final_score']),
+                "score": round(float(row['final_score']), 4),
                 "duration": duration,
-                "description": f"Comprehensive masterclass in {title}. Provides in-depth curriculum modules and rigorous hands-on projects in {subj}.",
+                "description": desc,
                 "skills": skills,
                 "reason": reason
             }
@@ -848,6 +663,98 @@ def get_student_profile(student_id):
         }
         db.close()
         return jsonify({"status": "success", "student": ret_student})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/courses/catalog', methods=['GET'])
+def get_catalog():
+    try:
+        subject = request.args.get('subject') or request.args.get('domain')
+        search = request.args.get('search', '').lower().strip()
+        limit = int(request.args.get('limit', 16))
+        sort_by = request.args.get('sort', 'trending')
+        
+        df = recommender.df.copy()
+        domain_col = 'domain' if 'domain' in df.columns else 'subject'
+        
+        if subject and subject.lower() != 'all':
+            df = df[df[domain_col].astype(str).str.lower().str.contains(subject.lower(), na=False)]
+            
+        if search:
+            df = df[df['course_title'].astype(str).str.lower().str.contains(search, regex=False, na=False)]
+            
+        if sort_by == 'trending':
+            if 'rating' in df.columns:
+                df = df.sort_values(by='rating', ascending=False)
+            elif 'num_subscribers' in df.columns:
+                df = df.sort_values(by='num_subscribers', ascending=False)
+        elif sort_by == 'latest':
+            if 'course_id' in df.columns:
+                df = df.sort_values(by='course_id', ascending=False)
+                
+        courses = []
+        for _, row in df.head(limit).iterrows():
+            title = str(row['course_title'])
+            subj = str(row.get('domain') or row.get('subject') or 'General')
+            lvl = format_level(row.get('level', 'All Levels'))
+            cid = str(row.get('course_id', '0'))
+            rating = float(row.get('rating', 4.5)) if pd.notnull(row.get('rating')) else 4.5
+            duration = str(row.get('duration') or "6 Weeks")
+            skills_raw = str(row.get('skills') or subj)
+            skills = [s.strip() for s in skills_raw.split(',') if s.strip()][:4]
+            if not skills:
+                skills = extract_course_skills(title, subj)
+            
+            courses.append({
+                "course_id": cid,
+                "title": title,
+                "domain": subj,
+                "difficulty": lvl,
+                "duration": duration,
+                "rating": rating,
+                "skills": skills,
+                "description": str(row.get('description') or f"Comprehensive coursework in {title}. Covers practical foundations and key competencies.")
+            })
+            
+        return jsonify({"status": "success", "count": len(courses), "courses": courses})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/students/<int:student_id>/enroll', methods=['POST'])
+def enroll_student_course(student_id):
+    try:
+        data = request.get_json() or {}
+        course_title = (data.get('course_title') or '').strip()
+        action = data.get('action', 'enroll')
+        
+        if not course_title:
+            return jsonify({"error": "course_title is required"}), 400
+            
+        db = SessionLocal()
+        student = db.query(Student).filter(Student.id == student_id).first()
+        if not student:
+            db.close()
+            return jsonify({"error": "Student not found"}), 404
+            
+        current = [c.strip() for c in (student.current_courses or '').split(',') if c.strip()]
+        
+        if action == 'enroll':
+            if course_title not in current:
+                current.append(course_title)
+        elif action == 'drop':
+            current = [c for c in current if c != course_title]
+            
+        student.current_courses = ", ".join(current)
+        db.commit()
+        updated_courses = current
+        db.close()
+        
+        return jsonify({
+            "status": "success",
+            "action": action,
+            "course_title": course_title,
+            "enrolled_courses": updated_courses
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

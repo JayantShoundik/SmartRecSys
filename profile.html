@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartRecSys — Student Academic Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .profile-hero {
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+      border-radius: 18px;
+      padding: 32px 36px;
+      margin-bottom: 28px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .profile-avatar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .profile-avatar {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+      border: 3px solid rgba(255,255,255,0.2);
+    }
+    .profile-info h1 {
+      font-size: 1.8rem;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .profile-info p {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      margin: 0;
+    }
+    .profile-nav-tabs {
+      display: flex;
+      gap: 10px;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 28px;
+      padding-bottom: 4px;
+    }
+    .profile-tab-btn {
+      background: transparent;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #64748b;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .profile-tab-btn:hover {
+      color: #1e293b;
+      background: #f1f5f9;
+    }
+    .profile-tab-btn.active {
+      color: #4f46e5;
+      background: #eef2ff;
+      border-bottom: 3px solid #4f46e5;
+      border-radius: 8px 8px 0 0;
+    }
+    .profile-card-panel {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+      margin-bottom: 30px;
+    }
+    .tag-selectable {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tag-selectable:hover {
+      background: #e2e8f0;
+    }
+    .tag-selectable.selected {
+      background: #4f46e5;
+      color: #fff;
+      border-color: #4f46e5;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="topnav">
+    <a href="home.html" class="nav-logo">SmartRecSys</a>
+    <ul class="nav-links">
+      <li><a href="welcome.html"   class="nav-link" data-page="welcome">Welcome</a></li>
+      <li><a href="home.html"      class="nav-link" data-page="home">Home</a></li>
+      <li><a href="profile.html"   class="nav-link nav-active" data-page="profile">Profile</a></li>
+      <li><a href="about.html"     class="nav-link" data-page="about">About</a></li>
+      <li><a href="docs.html"      class="nav-link" data-page="docs">Docs</a></li>
+    </ul>
+  </nav>
+
+  <div class="hub-container">
+    
+    <!-- Profile Top Banner -->
+    <div class="profile-hero">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="avatarInitials">AS</div>
+        <div class="profile-info">
+          <h1 id="headerStudentName">Student Profile</h1>
+          <p id="headerStudentTrack">Academic Track & Curriculum Settings</p>
+          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;" id="headerBadges">
+            <span class="hub-track-chip" id="badgeDept">Computer Science</span>
+            <span class="hub-track-chip" id="badgeDegree">B.Tech (4-Year)</span>
+            <span class="hub-track-chip" id="badgeSem">Semester 5</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="home.html" class="hub-btn-secondary">← Back to Learning Hub</a>
+        <button type="button" id="printReportBtn" class="hub-btn-primary">📄 Print Advisory Report</button>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="profile-nav-tabs">
+      <button class="profile-tab-btn active" data-tab="tab-standing">🎓 Academic Standing & Preferences</button>
+      <button class="profile-tab-btn" data-tab="tab-enrollments">📚 My Course Enrollments</button>
+      <button class="profile-tab-btn" data-tab="tab-audits">🛡️ Advisory Audit History</button>
+    </div>
+
+    <!-- TAB 1: ACADEMIC STANDING & PREFERENCES -->
+    <div id="tab-standing" class="profile-tab-content">
+      <div class="profile-card-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h2 style="font-size:1.3rem; margin-bottom:4px; color:#0f172a;">Edit Academic Profile & Learning Goals</h2>
+            <p style="font-size:0.88rem; color:#64748b; margin:0;">These inputs directly calibrate your Hybrid AI course recommendations.</p>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span style="font-size:0.82rem; color:#64748b;">Quick Preset:</span>
+            <select id="profilePresetSelect" style="padding:7px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.84rem; background:#f8fafc;">
+              <option value="">Load Preset Student...</option>
+              <option value="Aarav Sharma">Aarav Sharma (B.Tech CS • ML Engineer)</option>
+              <option value="Priya Patel">Priya Patel (Freshman Cold-Start • Cyber)</option>
+              <option value="Rohan Verma">Rohan Verma (ECE 2nd Yr • Full Stack)</option>
+              <option value="Ananya Iyer">Ananya Iyer (BCA 3rd Yr • Frontend)</option>
+            </select>
+          </div>
+        </div>
+
+        <form id="editProfileForm" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label for="profName">Full Student Name <span class="req">*</span></label>
+              <input type="text" id="profName" name="name" placeholder="e.g. Aarav Sharma" required />
+            </div>
+
+            <div class="field">
+              <label for="profDept">Faculty / Department <span class="req">*</span></label>
+              <select id="profDept" name="department" required>
+                <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Electronics & Communication Engineering">Electronics & Communication Engineering</option>
+                <option value="School of Business & Management (MBA)">School of Business & Management (MBA)</option>
+                <option value="Corporate Finance & Investment">Corporate Finance & Investment</option>
+                <option value="Design & Creative Arts">Design & Creative Arts</option>
+                <option value="Natural Sciences & Biotechnology">Natural Sciences & Biotechnology</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="profDegree">Degree Program <span class="req">*</span></label>
+              <select id="profDegree" name="degree">
+                <option value="B.Tech (4-Year)">B.Tech (4-Year)</option>
+                <option value="BCA (3-Year)">BCA (3-Year)</option>
+                <option value="M.Tech (2-Year)">M.Tech (2-Year)</option>
+                <option value="MBA (2-Year)">MBA (2-Year)</option>
+                <option value="B.Des (4-Year)">B.Des (4-Year)</option>
+                <option value="BBA (3-Year)">BBA (3-Year)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="profYear">Academic Year & Standing</label>
+              <select id="profYear" name="year">
+                <option value="1st Year">1st Year (Freshman)</option>
+                <option value="2nd Year" selected>2nd Year (Sophomore)</option>
+                <option value="3rd Year">3rd Year (Junior)</option>
+                <option value="4th Year">4th Year (Senior)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="profSem">Semester Number</label>
+              <select id="profSem" name="semester">
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+                <option value="3">Semester 3</option>
+                <option value="4">Semester 4</option>
+                <option value="5" selected>Semester 5</option>
+                <option value="6">Semester 6</option>
+                <option value="7">Semester 7</option>
+                <option value="8">Semester 8</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="profCgpa">Cumulative CGPA (0.0 - 10.0)</label>
+              <input type="number" id="profCgpa" name="cgpa" step="0.01" min="0" max="10" placeholder="e.g. 8.75" />
+            </div>
+
+            <div class="field" style="grid-column: 1 / -1;">
+              <label for="profGoal">Target Career Goal / Professional Specialization</label>
+              <input type="text" id="profGoal" name="career_goal" placeholder="e.g. Machine Learning Engineer, Cloud Security Architect, Full Stack Developer" />
+            </div>
+
+            <div class="field" style="grid-column: 1 / -1;">
+              <label>Target Academic Domains & Specializations (Click to select multiple)</label>
+              <div id="domainsContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+                <span class="tag-selectable selected" data-val="Artificial Intelligence & Data Science">🤖 AI & Data Science</span>
+                <span class="tag-selectable" data-val="Web Development">💻 Web Development</span>
+                <span class="tag-selectable" data-val="Cybersecurity & Cloud">🛡️ Cybersecurity & Cloud</span>
+                <span class="tag-selectable" data-val="Programming & Software Engineering">⚡ Programming & Software Eng</span>
+                <span class="tag-selectable" data-val="Design & Creative Arts">🎨 UI/UX & Graphic Design</span>
+                <span class="tag-selectable" data-val="Business & Finance">📊 Business & Corporate Finance</span>
+              </div>
+            </div>
+
+            <div class="field" style="grid-column: 1 / -1;">
+              <label>Preferred Course Difficulty Level</label>
+              <div id="difficultyContainer" style="display:flex; gap:10px; margin-top:6px;">
+                <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                  <input type="radio" name="difficulty" value="Beginner" /> Beginner
+                </label>
+                <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                  <input type="radio" name="difficulty" value="Intermediate" checked /> Intermediate
+                </label>
+                <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                  <input type="radio" name="difficulty" value="Advanced" /> Advanced / Expert
+                </label>
+              </div>
+            </div>
+
+            <div class="field" style="grid-column: 1 / -1;">
+              <label for="profPrereq">Completed Prerequisites / Prior Coursework</label>
+              <input type="text" id="profPrereq" name="completed_courses" placeholder="e.g. Python Programming, Data Structures, Discrete Mathematics" />
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:28px;">
+            <button type="submit" id="saveProfileBtn" class="hub-btn-primary" style="padding:12px 28px;">
+              💾 Save Profile & Recalculate Recommendations
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB 2: MY ENROLLMENTS -->
+    <div id="tab-enrollments" class="profile-tab-content" style="display:none;">
+      <div class="profile-card-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <h2 style="font-size:1.3rem; margin-bottom:4px; color:#0f172a;">Current Semester Course Enrollments</h2>
+            <p style="font-size:0.88rem; color:#64748b; margin:0;">Courses currently selected in your academic schedule.</p>
+          </div>
+          <a href="home.html#recommendationsSection" class="hub-btn-primary" style="font-size:0.84rem; padding:8px 16px;">+ Add More Courses</a>
+        </div>
+
+        <div id="profileEnrolledList" style="display:flex; flex-direction:column; gap:14px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: ADVISORY AUDIT HISTORY -->
+    <div id="tab-audits" class="profile-tab-content" style="display:none;">
+      <div class="profile-card-panel">
+        <h2 style="font-size:1.3rem; margin-bottom:4px; color:#0f172a;">Academic Advisory Audit Log (XAI)</h2>
+        <p style="font-size:0.88rem; color:#64748b; margin-bottom:20px;">Tamper-evident SQLite audit logs capturing past recommendation snapshots.</p>
+
+        <div id="auditLogList" style="display:flex; flex-direction:column; gap:12px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="hubToast" class="hub-toast">
+    <span id="toastIcon">✓</span>
+    <span id="toastMsg">Profile updated successfully!</span>
+  </div>
+
+  <script src="nav.js"></script>
+  <script>
+    // Profile Management Script
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Tab Switching
+      const tabBtns = document.querySelectorAll('.profile-tab-btn');
+      const tabContents = document.querySelectorAll('.profile-tab-content');
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.style.display = 'none');
+          btn.classList.add('active');
+          const targetId = btn.getAttribute('data-tab');
+          document.getElementById(targetId).style.display = 'block';
+          if (targetId === 'tab-enrollments') renderProfileEnrollments();
+          if (targetId === 'tab-audits') loadAuditHistory();
+        });
+      });
+
+      // 2. Selectable Domain Chips
+      const domainChips = document.querySelectorAll('#domainsContainer .tag-selectable');
+      domainChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          chip.classList.toggle('selected');
+        });
+      });
+
+      // 3. Load Active Profile from localStorage or SQLite
+      loadStudentProfileData();
+
+      // 4. Form Submit
+      const form = document.getElementById('editProfileForm');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveProfileData();
+      });
+
+      // 5. Preset Select handler
+      const presetSelect = document.getElementById('profilePresetSelect');
+      presetSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (!val) return;
+        applyPreset(val);
+      });
+
+      // 6. Print Report button
+      document.getElementById('printReportBtn').addEventListener('click', () => {
+        window.open('http://127.0.0.1:5001/api/report', '_blank');
+      });
+    });
+
+    function showToast(msg, icon = '✓') {
+      const toast = document.getElementById('hubToast');
+      document.getElementById('toastMsg').textContent = msg;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function loadStudentProfileData() {
+      const raw = localStorage.getItem('srs_session_student');
+      let student = {
+        name: 'Aarav Sharma',
+        department: 'Computer Science & Engineering',
+        degree: 'B.Tech (4-Year)',
+        year: '3rd Year',
+        semester: 5,
+        cgpa: 8.85,
+        career_goal: 'Machine Learning Engineer',
+        domains: ['Artificial Intelligence & Data Science', 'Programming & Software Engineering'],
+        difficulty: 'Intermediate',
+        completed_courses: 'Python Programming, Data Structures & Algorithms'
+      };
+
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          student = Object.assign(student, parsed);
+        } catch (e) {}
+      }
+
+      // Populate Inputs
+      document.getElementById('profName').value = student.name || '';
+      document.getElementById('profDept').value = student.department || 'Computer Science & Engineering';
+      document.getElementById('profDegree').value = student.degree || 'B.Tech (4-Year)';
+      document.getElementById('profYear').value = student.year || '2nd Year';
+      document.getElementById('profSem').value = String(student.semester || 3);
+      document.getElementById('profCgpa').value = student.cgpa || '';
+      document.getElementById('profGoal').value = student.career_goal || '';
+      document.getElementById('profPrereq').value = student.completed_courses || '';
+
+      // Radio Difficulty
+      const diffVal = student.difficulty || 'Intermediate';
+      const rad = document.querySelector(`input[name="difficulty"][value="${diffVal}"]`);
+      if (rad) rad.checked = true;
+
+      // Selectable Domains
+      const studentDomains = Array.isArray(student.domains) ? student.domains : (student.domains || '').split(',').map(s => s.trim());
+      document.querySelectorAll('#domainsContainer .tag-selectable').forEach(chip => {
+        const val = chip.getAttribute('data-val');
+        if (studentDomains.some(d => d.toLowerCase() === val.toLowerCase())) {
+          chip.classList.add('selected');
+        } else {
+          chip.classList.remove('selected');
+        }
+      });
+
+      // Update Header
+      updateHeaderDisplay(student);
+    }
+
+    function updateHeaderDisplay(student) {
+      document.getElementById('headerStudentName').textContent = student.name || 'Student';
+      document.getElementById('headerStudentTrack').textContent = `Target: ${student.career_goal || 'Engineering Professional'}`;
+      document.getElementById('badgeDept').textContent = student.department || 'Computer Science';
+      document.getElementById('badgeDegree').textContent = student.degree || 'B.Tech';
+      document.getElementById('badgeSem').textContent = `Sem ${student.semester || 3}`;
+
+      const names = (student.name || 'Student').split(' ');
+      const initials = names.length > 1 ? (names[0][0] + names[1][0]).toUpperCase() : names[0].substring(0, 2).toUpperCase();
+      document.getElementById('avatarInitials').textContent = initials;
+    }
+
+    async function saveProfileData() {
+      const selectedDomains = [];
+      document.querySelectorAll('#domainsContainer .tag-selectable.selected').forEach(c => {
+        selectedDomains.push(c.getAttribute('data-val'));
+      });
+      if (selectedDomains.length === 0) selectedDomains.push("Computer Science & Engineering");
+
+      const diffRadio = document.querySelector('input[name="difficulty"]:checked');
+      const difficulty = diffRadio ? diffRadio.value : 'Intermediate';
+
+      const payload = {
+        name: document.getElementById('profName').value.trim() || 'Student',
+        department: document.getElementById('profDept').value,
+        degree: document.getElementById('profDegree').value,
+        year: document.getElementById('profYear').value,
+        semester: parseInt(document.getElementById('profSem').value) || 3,
+        cgpa: parseFloat(document.getElementById('profCgpa').value) || null,
+        career_goal: document.getElementById('profGoal').value.trim() || 'Software Engineer',
+        domains: selectedDomains,
+        difficulty: difficulty,
+        completed_courses: document.getElementById('profPrereq').value.trim()
+      };
+
+      // 1. Save to LocalStorage
+      localStorage.setItem('srs_session_student', JSON.stringify(payload));
+      localStorage.setItem('srs_student_name', payload.name);
+
+      // 2. Persist to SQLite via API
+      try {
+        const res = await fetch('http://127.0.0.1:5001/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.student_id) {
+          payload.id = data.student_id;
+          localStorage.setItem('srs_session_student', JSON.stringify(payload));
+          localStorage.setItem('srs_student_id', data.student_id);
+        }
+      } catch (err) {
+        console.warn('Could not sync to backend:', err);
+      }
+
+      updateHeaderDisplay(payload);
+      showToast('Profile updated & synchronized! Recalculating AI courses...');
+      setTimeout(() => {
+        window.location.href = 'home.html';
+      }, 1200);
+    }
+
+    function applyPreset(name) {
+      const presets = {
+        'Aarav Sharma': {
+          name: 'Aarav Sharma',
+          department: 'Computer Science & Engineering',
+          degree: 'B.Tech (4-Year)',
+          year: '3rd Year',
+          semester: 5,
+          cgpa: 8.85,
+          career_goal: 'Machine Learning Engineer',
+          domains: ['Artificial Intelligence & Data Science', 'Programming & Software Engineering'],
+          difficulty: 'Intermediate',
+          completed_courses: 'Python Programming, Data Structures, Discrete Mathematics'
+        },
+        'Priya Patel': {
+          name: 'Priya Patel',
+          department: 'Information Technology',
+          degree: 'B.Tech (4-Year)',
+          year: '1st Year',
+          semester: 1,
+          cgpa: null,
+          career_goal: 'Cloud Security Architect',
+          domains: ['Cybersecurity & Cloud', 'Programming & Software Engineering'],
+          difficulty: 'Beginner',
+          completed_courses: 'Introduction to Computing'
+        },
+        'Rohan Verma': {
+          name: 'Rohan Verma',
+          department: 'Electronics & Communication Engineering',
+          degree: 'B.Tech (4-Year)',
+          year: '2nd Year',
+          semester: 4,
+          cgpa: 8.20,
+          career_goal: 'Full Stack Developer',
+          domains: ['Web Development', 'Programming & Software Engineering'],
+          difficulty: 'Intermediate',
+          completed_courses: 'C++ Programming, Digital Systems'
+        },
+        'Ananya Iyer': {
+          name: 'Ananya Iyer',
+          department: 'Computer Science & Engineering',
+          degree: 'BCA (3-Year)',
+          year: '3rd Year',
+          semester: 6,
+          cgpa: 9.10,
+          career_goal: 'Frontend Architect',
+          domains: ['Web Development', 'Design & Creative Arts'],
+          difficulty: 'Advanced',
+          completed_courses: 'HTML5, CSS3, JavaScript Foundations, UI Design'
+        }
+      };
+
+      const p = presets[name];
+      if (!p) return;
+      localStorage.setItem('srs_session_student', JSON.stringify(p));
+      loadStudentProfileData();
+      showToast(`Loaded ${p.name} profile preset!`);
+    }
+
+    function renderProfileEnrollments() {
+      const list = document.getElementById('profileEnrolledList');
+      const enrolled = JSON.parse(localStorage.getItem('srs_enrolled_courses') || '[]');
+
+      if (enrolled.length === 0) {
+        list.innerHTML = `
+          <div class="enrolled-empty-card">
+            <div class="enrolled-empty-icon">📚</div>
+            <div class="enrolled-empty-title">No Courses Enrolled Yet</div>
+            <p class="enrolled-empty-desc">You haven't enrolled in any elective courses yet. Explore your AI recommended curriculum on the Home dashboard!</p>
+            <a href="home.html#recommendationsSection" class="hub-btn-primary">Browse Recommended Courses →</a>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = enrolled.map((c, idx) => `
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span class="enrolled-badge">Active Enrollment</span>
+              <span style="font-size:0.75rem; color:#64748b;">${c.domain || 'Curricular Elective'}</span>
+            </div>
+            <h4 style="font-size:1.05rem; margin:0 0 4px 0; color:#0f172a;">${c.title}</h4>
+            <span style="font-size:0.8rem; color:#64748b;">Duration: ${c.duration || '6 Weeks'} • Status: In Progress</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <a href="home.html" class="enrolled-resume-btn" style="text-decoration:none; padding:8px 14px; font-size:0.84rem;">Go to Course</a>
+            <button type="button" class="enrolled-drop-btn" onclick="dropCourseFromProfile(${idx})" style="padding:8px 14px; font-size:0.84rem;">Drop Course</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.dropCourseFromProfile = function(idx) {
+      const enrolled = JSON.parse(localStorage.getItem('srs_enrolled_courses') || '[]');
+      const dropped = enrolled.splice(idx, 1);
+      localStorage.setItem('srs_enrolled_courses', JSON.stringify(enrolled));
+      renderProfileEnrollments();
+      showToast(`Dropped "${dropped[0]?.title || 'course'}" from schedule`);
+    };
+
+    async function loadAuditHistory() {
+      const container = document.getElementById('auditLogList');
+      container.innerHTML = '<p style="color:#64748b;">Loading verified audit logs from SQLite database...</p>';
+
+      const student = JSON.parse(localStorage.getItem('srs_session_student') || '{}');
+      const studentId = student.id || localStorage.getItem('srs_student_id') || 1;
+
+      try {
+        const res = await fetch(`http://127.0.0.1:5001/api/students/${studentId}`);
+        const data = await res.json();
+        const audits = data.student?.audit_history || [];
+
+        if (audits.length === 0) {
+          container.innerHTML = `
+            <div class="enrolled-empty-card">
+              <div class="enrolled-empty-icon">🛡️</div>
+              <div class="enrolled-empty-title">No Audit Logs Recorded Yet</div>
+              <p class="enrolled-empty-desc">Audit logs are automatically generated whenever you run recommendations on the Home dashboard.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = audits.map(a => `
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong style="color:#0f172a; font-size:0.95rem;">Audit #${a.audit_id} • ${a.model_used}</strong>
+              <span style="font-size:0.75rem; color:#64748b;">${a.timestamp}</span>
+            </div>
+            <p style="font-size:0.82rem; color:#475569; margin-bottom:10px;">
+              Target Domains: <strong>${a.query_domains}</strong> • Difficulty: <strong>${a.query_difficulty}</strong>
+            </p>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              ${(a.courses || []).map(c => `
+                <span style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:3px 8px; font-size:0.75rem; color:#1e293b;">
+                  ${c.title} (${Math.round((c.score || 0.85) * 100)}% Match)
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<p style="color:#ef4444;">Unable to load audit history from backend.</p>';
+      }
+    }
+  </script>
+</body>
+</html>

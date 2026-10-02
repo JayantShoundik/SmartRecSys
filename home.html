@@ -3,536 +3,725 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SmartRecSys — Student Profile</title>
+  <title>SmartRecSys — E-Learning Campus Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="page-home">
 
+  <!-- ── Top Navigation Bar ── -->
   <nav class="topnav">
-    <a href="welcome.html" class="nav-logo">SmartRecSys</a>
+    <a href="home.html" class="nav-logo">SmartRecSys</a>
     <ul class="nav-links">
       <li><a href="welcome.html"   class="nav-link" data-page="welcome">Welcome</a></li>
-      <li><a href="login.html"     class="nav-link" data-page="login">Student Portal</a></li>
-      <li><a href="home.html"      class="nav-link" data-page="home">Home</a></li>
-      <li><a href="dashboard.html" class="nav-link" data-page="dashboard">Recommender</a></li>
+      <li><a href="home.html"      class="nav-link nav-active" data-page="home">Home</a></li>
+      <li><a href="profile.html"   class="nav-link" data-page="profile">Profile</a></li>
       <li><a href="about.html"     class="nav-link" data-page="about">About</a></li>
       <li><a href="docs.html"      class="nav-link" data-page="docs">Docs</a></li>
     </ul>
   </nav>
 
-  <div class="container">
-    <div class="form-page-header">
-      <h1>Your Academic Profile</h1>
-    <!-- Quick-Load Saved Profiles from SQLite Database -->
-    <div class="saved-profiles-panel" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 18px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:1.3rem;">💾</span>
-        <div>
-          <strong style="color:#0f172a; font-size:0.95rem;">Quick-Load Existing Student Profile</strong>
-          <p style="margin:0; font-size:0.82rem; color:#64748b;">Pick from saved campus profiles in SQLite database or enter a new student below.</p>
+  <!-- ── Main Learning Hub Container ── -->
+  <div class="hub-container">
+
+    <!-- ── 1. Netflix-Style Hero Banner ── -->
+    <header class="hub-hero">
+      <div class="hub-hero-content">
+        <div class="hub-hero-main">
+          <span class="hub-eyebrow">Smart Campus Recommendation Engine</span>
+          <h1 class="hub-hero-title">Welcome back, <span id="heroStudentName">Student</span> 👋</h1>
+          <p class="hub-hero-sub" id="heroSubtitle">
+            Continuing your personalized curriculum track tailored to your academic standing and professional aspirations.
+          </p>
+
+          <!-- Track Chips -->
+          <div class="hub-track-chips" id="heroTrackChips">
+            <span class="hub-track-chip" id="chipDept">🎓 Computer Science</span>
+            <span class="hub-track-chip" id="chipDegree">B.Tech (4-Year)</span>
+            <span class="hub-track-chip" id="chipSem">Semester 5</span>
+            <span class="hub-track-chip" id="chipGoal">🎯 Target: Machine Learning Engineer</span>
+          </div>
+
+          <!-- Hero Actions -->
+          <div class="hub-hero-actions">
+            <a href="#recommendationsSection" class="hub-btn-primary">
+              <span>⚡</span> Explore AI Recommendations
+            </a>
+            <a href="profile.html" class="hub-btn-secondary">
+              <span>⚙️</span> Edit Academic Profile
+            </a>
+            <button type="button" id="heroPrintReportBtn" class="hub-btn-secondary" style="border-color:rgba(255,255,255,0.3);">
+              <span>📄</span> Advisory Report
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Summary Stats Card -->
+        <div class="hub-hero-stats">
+          <div class="hub-stat-item">
+            <div class="hub-stat-val" id="statEnrolledCount">0</div>
+            <div class="hub-stat-lbl">Enrolled Courses</div>
+          </div>
+          <div class="hub-stat-item" style="border-left:1px solid rgba(255,255,255,0.15); border-right:1px solid rgba(255,255,255,0.15); padding:0 18px;">
+            <div class="hub-stat-val" id="statMatchScore">96%</div>
+            <div class="hub-stat-lbl">Top AI Match</div>
+          </div>
+          <div class="hub-stat-item">
+            <div class="hub-stat-val" id="statCatalogCount">7,791</div>
+            <div class="hub-stat-lbl">Catalog Courses</div>
+          </div>
         </div>
       </div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <select id="savedProfilesSelect" style="padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.88rem; background:#fff; min-width:240px;">
-          <option value="">➕ Create / Enter New Profile</option>
-        </select>
-        <button type="button" id="loadProfileBtn" style="padding:8px 14px; background:#4f46e5; color:#fff; border:none; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">
-          Load Profile
-        </button>
-      </div>
-    </div>
+    </header>
 
-    <form id="profileForm" class="profile-form" novalidate>
-
-      <!-- ── Personal Information ── -->
-      <fieldset class="form-section">
-        <legend>Personal Information</legend>
-        <div class="form-grid">
-
-          <div class="field">
-            <label for="studentName">Student Name <span class="req">*</span></label>
-            <input type="text" id="studentName" name="studentName" placeholder="e.g. Aisha Raza" autocomplete="name" />
-            <span class="field-error" id="err-studentName"></span>
+    <!-- ── 2. ROW 1: My Enrolled & Selected Courses (Continue Learning) ── -->
+    <section class="hub-section" id="enrolledSection">
+      <div class="hub-row-header">
+        <div class="hub-row-title-wrap">
+          <span class="hub-row-icon">📚</span>
+          <div>
+            <h2 class="hub-row-title">Continue Learning & Enrolled Courses</h2>
+            <p class="hub-row-sub">Your active semester coursework and saved electives</p>
           </div>
-
-          <div class="field">
-            <label for="department">Department <span class="req">*</span></label>
-            <select id="department" name="department">
-              <option value="">Select department</option>
-              <option>Computer Science</option>
-              <option>Information Technology</option>
-              <option>Software Engineering</option>
-              <option>Electrical Engineering</option>
-              <option>Data Science</option>
-              <option>Other</option>
-            </select>
-            <span class="field-error" id="err-department"></span>
-          </div>
-
-          <div class="field">
-            <label for="degree">Degree Program <span class="req">*</span></label>
-            <select id="degree" name="degree">
-              <option value="">Select degree</option>
-              <option value="B.Tech (4-Year)">B.Tech (4-Year)</option>
-              <option value="BE (4-Year)">BE (4-Year)</option>
-              <option value="BS (4-Year)">BS (4-Year)</option>
-              <option value="B.Sc (3-Year)">B.Sc (3-Year)</option>
-              <option value="BCA (3-Year)">BCA (3-Year)</option>
-              <option value="BBA (3-Year)">BBA (3-Year)</option>
-              <option value="M.Tech (2-Year)">M.Tech (2-Year)</option>
-              <option value="MS (2-Year)">MS (2-Year)</option>
-              <option value="MCA (2-Year)">MCA (2-Year)</option>
-              <option value="PhD">PhD</option>
-            </select>
-            <span class="field-error" id="err-degree"></span>
-          </div>
-
-          <div class="field">
-            <label for="batch">Academic Year <span class="req">*</span></label>
-            <select id="batch" name="batch">
-              <option value="">Select year (choose degree first)</option>
-            </select>
-            <span class="field-error" id="err-batch"></span>
-          </div>
-
-          <div class="field">
-            <label for="semester">Current Semester <span class="req">*</span></label>
-            <select id="semester" name="semester">
-              <option value="">Select semester (choose year first)</option>
-            </select>
-            <span class="field-error" id="err-semester"></span>
-          </div>
-
-          <div class="field">
-            <label for="cgpa">CGPA <span class="optional">(optional)</span></label>
-            <input type="number" id="cgpa" name="cgpa" placeholder="e.g. 8.5" min="0" max="10" step="0.01" />
-            <span class="field-error" id="err-cgpa"></span>
-          </div>
-
         </div>
-      </fieldset>
-
-      <!-- ── Academic Information ── -->
-      <fieldset class="form-section">
-        <legend>Academic Information</legend>
-
-        <div class="field">
-          <label for="completedCourses">Previously Completed Courses <span class="optional">(optional)</span></label>
-          <textarea id="completedCourses" name="completedCourses" rows="3"
-            placeholder="e.g. Introduction to Programming, Data Structures, Database Systems"></textarea>
-          <span class="field-hint">Separate course names with commas.</span>
+        <div class="hub-row-controls">
+          <button type="button" class="hub-scroll-btn" onclick="scrollRow('enrolledCardsRow', -320)" aria-label="Scroll left">‹</button>
+          <button type="button" class="hub-scroll-btn" onclick="scrollRow('enrolledCardsRow', 320)" aria-label="Scroll right">›</button>
         </div>
-
-        <div class="field">
-          <label for="currentCourses">Current Semester Courses <span class="optional">(optional)</span></label>
-          <textarea id="currentCourses" name="currentCourses" rows="2"
-            placeholder="e.g. Operating Systems, Computer Networks"></textarea>
-        </div>
-
-        <div class="field">
-          <label>Preferred Domain / Interest <span class="req">*</span></label>
-          <div class="checkboxes" id="domainInterestGroup">
-            <label class="chip"><input type="checkbox" name="domainInterest" value="AI" /><span>AI</span></label>
-            <label class="chip"><input type="checkbox" name="domainInterest" value="Data Science" /><span>Data Science</span></label>
-            <label class="chip"><input type="checkbox" name="domainInterest" value="Cybersecurity" /><span>Cybersecurity</span></label>
-            <label class="chip"><input type="checkbox" name="domainInterest" value="Web Development" /><span>Web Development</span></label>
-            <label class="chip"><input type="checkbox" name="domainInterest" value="Cloud Computing" /><span>Cloud Computing</span></label>
-            <label class="chip"><input type="checkbox" name="domainInterest" value="Networking" /><span>Networking</span></label>
-            <label class="chip"><input type="checkbox" name="domainInterest" value="Programming" /><span>Programming</span></label>
-            <label class="chip"><input type="checkbox" name="domainInterest" value="Software Engineering" /><span>Software Engineering</span></label>
-          </div>
-          <span class="field-error" id="err-domainInterest"></span>
-        </div>
-
-      </fieldset>
-
-      <!-- ── Learning Preference ── -->
-      <fieldset class="form-section">
-        <legend>Learning Preference</legend>
-        <div class="field">
-          <label>Difficulty Level <span class="req">*</span></label>
-          <div class="radio-group" id="levelGroup">
-            <label class="radio-chip">
-              <input type="radio" name="level" value="Beginner" />
-              <span>
-                <strong>Beginner</strong>
-                <small>New to the domain, foundational topics</small>
-              </span>
-            </label>
-            <label class="radio-chip">
-              <input type="radio" name="level" value="Intermediate" />
-              <span>
-                <strong>Intermediate</strong>
-                <small>Some background, ready to go deeper</small>
-              </span>
-            </label>
-            <label class="radio-chip">
-              <input type="radio" name="level" value="Advanced" />
-              <span>
-                <strong>Advanced</strong>
-                <small>Strong foundation, looking for specialisation</small>
-              </span>
-            </label>
-          </div>
-          <span class="field-error" id="err-level"></span>
-        </div>
-      </fieldset>
-
-      <!-- ── Career Goal ── -->
-      <fieldset class="form-section">
-        <legend>Career Goal <span class="optional">(optional)</span></legend>
-        <div class="field">
-          <label for="careerGoal">What are you aiming for after graduation?</label>
-          <select id="careerGoal" name="careerGoal">
-            <option value="">Select a goal (optional)</option>
-            <option>Software Engineer</option>
-            <option>ML Engineer</option>
-            <option>Data Analyst</option>
-            <option>Cybersecurity Analyst</option>
-            <option>Cloud Architect</option>
-            <option>Research</option>
-            <option>Higher Studies</option>
-            <option>Other</option>
-          </select>
-        </div>
-      </fieldset>
-
-      <div class="form-actions">
-        <button type="submit" id="submitBtn">Get Recommendations →</button>
-        <button type="button" id="resetBtn" class="btn-secondary">Reset</button>
       </div>
 
-    </form>
+      <!-- Enrolled Cards Track -->
+      <div class="hub-cards-row" id="enrolledCardsRow">
+        <!-- Dynamically rendered via JS -->
+      </div>
+    </section>
+
+    <!-- ── 3. ROW 2: Top Recommendations For You (SmartRecSys Hybrid AI) ── -->
+    <section class="hub-section" id="recommendationsSection">
+      <div class="hub-row-header">
+        <div class="hub-row-title-wrap">
+          <span class="hub-row-icon">🎯</span>
+          <div>
+            <h2 class="hub-row-title">Top Recommendations For You</h2>
+            <p class="hub-row-sub">Synthesized by SmartRecSys Deep Hybrid Engine matching your degree, prerequisites, and career goals</p>
+          </div>
+        </div>
+        <div class="hub-row-controls">
+          <button type="button" class="hub-scroll-btn" onclick="scrollRow('recomCardsRow', -320)" aria-label="Scroll left">‹</button>
+          <button type="button" class="hub-scroll-btn" onclick="scrollRow('recomCardsRow', 320)" aria-label="Scroll right">›</button>
+        </div>
+      </div>
+
+      <!-- Recommendations Cards Track -->
+      <div class="hub-cards-row" id="recomCardsRow">
+        <div style="padding: 24px; color: #64748b; font-size: 0.95rem;">
+          Loading AI recommendations tailored to your profile...
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 4. ROW 3: Latest & Trending Campus Electives ── -->
+    <section class="hub-section" id="catalogSection">
+      <div class="hub-row-header">
+        <div class="hub-row-title-wrap">
+          <span class="hub-row-icon">🔥</span>
+          <div>
+            <h2 class="hub-row-title">Latest & Trending Campus Electives</h2>
+            <p class="hub-row-sub">Highly rated multidisciplinary courses across faculties</p>
+          </div>
+        </div>
+        <div class="hub-row-controls">
+          <button type="button" class="hub-scroll-btn" onclick="scrollRow('trendingCardsRow', -320)" aria-label="Scroll left">‹</button>
+          <button type="button" class="hub-scroll-btn" onclick="scrollRow('trendingCardsRow', 320)" aria-label="Scroll right">›</button>
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="hub-filter-tabs" id="catalogFilterTabs">
+        <button type="button" class="hub-filter-tab active" data-subject="all">All Tracks</button>
+        <button type="button" class="hub-filter-tab" data-subject="Artificial Intelligence & Data Science">AI & Data Science</button>
+        <button type="button" class="hub-filter-tab" data-subject="Web Development">Web & Software</button>
+        <button type="button" class="hub-filter-tab" data-subject="Cybersecurity & Cloud">Cyber & Cloud</button>
+        <button type="button" class="hub-filter-tab" data-subject="Corporate Finance & Investment">Business & Finance</button>
+        <button type="button" class="hub-filter-tab" data-subject="Design & Creative Arts">Design & UX</button>
+      </div>
+
+      <!-- Trending Cards Track -->
+      <div class="hub-cards-row" id="trendingCardsRow">
+        <div style="padding: 24px; color: #64748b; font-size: 0.95rem;">
+          Loading campus catalog courses...
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 5. ROW 4: Explore Career Pathways ── -->
+    <section class="hub-section">
+      <div class="hub-row-header">
+        <div class="hub-row-title-wrap">
+          <span class="hub-row-icon">🧭</span>
+          <div>
+            <h2 class="hub-row-title">Explore Specialized Academic Pathways</h2>
+            <p class="hub-row-sub">Curated multi-course specializations for high-demand engineering careers</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hub-pathways-grid">
+        <div class="hub-pathway-card" onclick="filterCatalogByTrack('Artificial Intelligence & Data Science')">
+          <div class="hub-pathway-icon">🤖</div>
+          <h3 class="hub-pathway-title">AI & Machine Learning</h3>
+          <p class="hub-pathway-desc">Deep learning, neural networks, computer vision, and predictive analytics.</p>
+        </div>
+        <div class="hub-pathway-card" onclick="filterCatalogByTrack('Cybersecurity & Cloud')">
+          <div class="hub-pathway-icon">🛡️</div>
+          <h3 class="hub-pathway-title">Cybersecurity & Cloud</h3>
+          <p class="hub-pathway-desc">Cloud architecture, ethical hacking, identity management, and network defense.</p>
+        </div>
+        <div class="hub-pathway-card" onclick="filterCatalogByTrack('Web Development')">
+          <div class="hub-pathway-icon">💻</div>
+          <h3 class="hub-pathway-title">Full-Stack Engineering</h3>
+          <p class="hub-pathway-desc">Modern React, Node.js, RESTful architectures, and microservices.</p>
+        </div>
+        <div class="hub-pathway-card" onclick="filterCatalogByTrack('Design & Creative Arts')">
+          <div class="hub-pathway-icon">🎨</div>
+          <h3 class="hub-pathway-title">UI/UX & Product Design</h3>
+          <p class="hub-pathway-desc">User research, interaction wireframing, Figma design systems, and usability.</p>
+        </div>
+        <div class="hub-pathway-card" onclick="filterCatalogByTrack('Corporate Finance & Investment')">
+          <div class="hub-pathway-icon">📊</div>
+          <h3 class="hub-pathway-title">Fintech & Financial Modeling</h3>
+          <p class="hub-pathway-desc">Quantitative analysis, asset pricing, valuation, and algorithmic trading.</p>
+        </div>
+      </div>
+    </section>
+
   </div>
 
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <span class="footer-logo">SmartRecSys</span>
-      <span class="footer-copy">Final-Year Major Project &mdash; AI-Powered Course Recommendation System</span>
-      <nav class="footer-nav" aria-label="Footer navigation">
-        <a href="welcome.html">Welcome</a>
-        <a href="home.html">Home</a>
-        <a href="about.html">About</a>
-        <a href="docs.html">Docs</a>
-        <a href="dashboard.html">Recommender</a>
-      </nav>
+  <!-- ── Interactive Course Details Modal ── -->
+  <div id="courseModalBackdrop" class="hub-modal-backdrop" onclick="closeCourseModal(event)">
+    <div class="hub-modal" onclick="event.stopPropagation()">
+      <div class="hub-modal-header">
+        <div>
+          <span class="hub-domain-badge" id="modalDomain" style="background:#4f46e5; margin-bottom:6px; display:inline-block;">Domain</span>
+          <h3 class="hub-modal-title" id="modalTitle">Course Title</h3>
+          <p style="font-size:0.82rem; color:#64748b; margin:4px 0 0 0;" id="modalMeta">Duration • Level • Institution</p>
+        </div>
+        <button type="button" class="hub-modal-close" onclick="closeCourseModalDirect()">×</button>
+      </div>
+      <div class="hub-modal-body">
+        <div id="modalMatchWrap" style="margin-bottom:14px; display:none;">
+          <span class="hub-match-pill" id="modalMatchBadge" style="font-size:0.85rem; padding:4px 12px;">⚡ 95% Match</span>
+        </div>
+        <div id="modalReasonWrap" style="background:#f8fafc; border-left:3px solid #4f46e5; padding:10px 14px; border-radius:0 8px 8px 0; margin-bottom:18px;">
+          <strong style="font-size:0.82rem; color:#1e293b; display:block; margin-bottom:2px;">Pedagogical Recommendation Rationale:</strong>
+          <span id="modalReasonText" style="font-size:0.82rem; color:#475569; line-height:1.45;">Because you are pursuing Machine Learning...</span>
+        </div>
+        <div style="margin-bottom:18px;">
+          <h4 style="font-size:0.9rem; font-weight:700; color:#0f172a; margin-bottom:6px;">Course Overview & Syllabus</h4>
+          <p id="modalDesc" style="font-size:0.85rem; color:#475569; line-height:1.5;">Course description...</p>
+        </div>
+        <div>
+          <h4 style="font-size:0.9rem; font-weight:700; color:#0f172a; margin-bottom:6px;">Key Competencies Covered</h4>
+          <div id="modalSkills" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        </div>
+      </div>
+      <div class="hub-modal-footer">
+        <button type="button" class="hub-btn-secondary" style="color:#334155; border-color:#cbd5e1;" onclick="closeCourseModalDirect()">Close</button>
+        <button type="button" id="modalEnrollBtn" class="hub-btn-primary">Enroll in Course</button>
+      </div>
     </div>
+  </div>
+
+  <!-- ── Floating Toast Notification ── -->
+  <div id="hubToast" class="hub-toast">
+    <span id="toastIcon">✓</span>
+    <span id="toastMsg">Course added to your schedule!</span>
+  </div>
+
+  <footer style="background:#0f172a; color:#94a3b8; padding:32px 20px; text-align:center; font-size:0.82rem; border-top:1px solid #1e293b; margin-top:auto;">
+    <p style="margin:0 0 6px 0; color:#f1f5f9; font-weight:600;">SmartRecSys — Intelligent Hybrid Course Recommendation System</p>
+    <p style="margin:0;">Developed for University Smart Campuses Addressing Cold-Start & Data Sparsity with XAI.</p>
   </footer>
 
+  <!-- Scripts -->
   <script src="nav.js"></script>
   <script>
-    // ── Cascading Academic Definitions ────────────────────────────────────────
-    const DEGREE_YEAR_MAP = {
-      'B.Tech (4-Year)': ['1st Year', '2nd Year', '3rd Year', '4th Year'],
-      'BE (4-Year)':     ['1st Year', '2nd Year', '3rd Year', '4th Year'],
-      'BS (4-Year)':     ['1st Year', '2nd Year', '3rd Year', '4th Year'],
-      'B.Sc (3-Year)':   ['1st Year', '2nd Year', '3rd Year'],
-      'BCA (3-Year)':    ['1st Year', '2nd Year', '3rd Year'],
-      'BBA (3-Year)':    ['1st Year', '2nd Year', '3rd Year'],
-      'M.Tech (2-Year)': ['1st Year', '2nd Year'],
-      'MS (2-Year)':     ['1st Year', '2nd Year'],
-      'MCA (2-Year)':    ['1st Year', '2nd Year'],
-      'PhD':             ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year']
-    };
+    // ── Global State & Helper Functions ──────────────────────────────────────
+    let activeStudent = null;
+    let recommendedCourses = [];
+    let currentModalCourse = null;
 
-    const YEAR_SEMESTER_MAP = {
-      '1st Year': [1, 2],
-      '2nd Year': [3, 4],
-      '3rd Year': [5, 6],
-      '4th Year': [7, 8],
-      '5th Year': [9, 10]
-    };
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Initialize Active Student Profile
+      initActiveStudent();
 
-    const degreeSel = document.getElementById('degree');
-    const batchSel  = document.getElementById('batch');
-    const semSel    = document.getElementById('semester');
+      // 2. Load and Render Enrolled Courses Row
+      renderEnrolledCourses();
 
-    function updateYears(selectedDegree, preserveVal = '') {
-      batchSel.innerHTML = '<option value="">Select year</option>';
-      semSel.innerHTML   = '<option value="">Select semester</option>';
-      if (!selectedDegree || !DEGREE_YEAR_MAP[selectedDegree]) return;
+      // 3. Fetch Hybrid AI Recommendations
+      await fetchRecommendations();
 
-      DEGREE_YEAR_MAP[selectedDegree].forEach(yr => {
-        const opt = document.createElement('option');
-        opt.value = yr;
-        opt.textContent = yr;
-        if (yr === preserveVal) opt.selected = true;
-        batchSel.appendChild(opt);
+      // 4. Fetch Trending Catalog Courses
+      await fetchTrendingCourses('all');
+
+      // 5. Setup Filter Tabs
+      setupCatalogFilterTabs();
+
+      // 6. Setup Report Button
+      document.getElementById('heroPrintReportBtn').addEventListener('click', () => {
+        window.open('http://127.0.0.1:5001/api/report', '_blank');
       });
-    }
-
-    function updateSemesters(selectedYear, preserveVal = '') {
-      semSel.innerHTML = '<option value="">Select semester</option>';
-      if (!selectedYear || !YEAR_SEMESTER_MAP[selectedYear]) return;
-
-      YEAR_SEMESTER_MAP[selectedYear].forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = 'Semester ' + s;
-        if (String(s) === String(preserveVal)) opt.selected = true;
-        semSel.appendChild(opt);
-      });
-    }
-
-    degreeSel.addEventListener('change', () => {
-      updateYears(degreeSel.value);
-      clearErr('degree');
-      clearErr('batch');
-      clearErr('semester');
     });
 
-    batchSel.addEventListener('change', () => {
-      updateSemesters(batchSel.value);
-      clearErr('batch');
-      clearErr('semester');
-    });
+    function initActiveStudent() {
+      const raw = localStorage.getItem('srs_session_student');
+      let student = {
+        name: 'Aarav Sharma',
+        department: 'Computer Science & Engineering',
+        degree: 'B.Tech (4-Year)',
+        year: '3rd Year',
+        semester: 5,
+        career_goal: 'Machine Learning Engineer',
+        domains: ['Artificial Intelligence & Data Science', 'Programming & Software Engineering'],
+        difficulty: 'Intermediate'
+      };
 
-    semSel.addEventListener('change', () => clearErr('semester'));
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          student = Object.assign(student, parsed);
+        } catch (e) {}
+      } else {
+        localStorage.setItem('srs_session_student', JSON.stringify(student));
+      }
 
-    // ── Restore saved form data from sessionStorage ──────────────────────────
-    const FIELDS = ['studentName','department','degree','batch','semester','cgpa',
-                    'completedCourses','currentCourses','careerGoal'];
+      activeStudent = student;
 
-    const savedDegree = sessionStorage.getItem('srs_degree') || '';
-    const savedBatch  = sessionStorage.getItem('srs_batch') || '';
-    const savedSem    = sessionStorage.getItem('srs_semester') || '';
-
-    if (savedDegree) {
-      degreeSel.value = savedDegree;
-      updateYears(savedDegree, savedBatch);
-      if (savedBatch) updateSemesters(savedBatch, savedSem);
+      // Update Hero Elements
+      document.getElementById('heroStudentName').textContent = student.name || 'Student';
+      document.getElementById('heroSubtitle').textContent = `Continuing your ${student.career_goal || 'Academic'} curriculum track (${student.degree || 'B.Tech'} • Semester ${student.semester || 3}).`;
+      document.getElementById('chipDept').textContent = `🎓 ${student.department || 'Computer Science'}`;
+      document.getElementById('chipDegree').textContent = student.degree || 'B.Tech';
+      document.getElementById('chipSem').textContent = `Semester ${student.semester || 3}`;
+      document.getElementById('chipGoal').textContent = `🎯 Target: ${student.career_goal || 'Engineering Professional'}`;
     }
 
-    FIELDS.forEach(id => {
-      if (id === 'degree' || id === 'batch' || id === 'semester') return;
-      const el  = document.getElementById(id);
-      const val = sessionStorage.getItem('srs_' + id);
-      if (el && val) el.value = val;
-    });
-
-    // Restore checkboxes
-    const savedDomains = JSON.parse(sessionStorage.getItem('srs_domainInterest') || '[]');
-    document.querySelectorAll('[name="domainInterest"]').forEach(cb => {
-      if (savedDomains.includes(cb.value)) cb.checked = true;
-    });
-
-    // Restore radio
-    const savedLevel = sessionStorage.getItem('srs_level');
-    if (savedLevel) {
-      const r = document.querySelector(`[name="level"][value="${savedLevel}"]`);
-      if (r) r.checked = true;
-    }
-
-    // ── Validation helpers ───────────────────────────────────────────────────
-    function showErr(id, msg) {
-      const el = document.getElementById('err-' + id);
-      if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
-    }
-    function clearErr(id) { showErr(id, ''); }
-
-    function validateForm() {
-      let valid = true;
-
-      const name = document.getElementById('studentName').value.trim();
-      if (!name || name.length < 2) { showErr('studentName', 'Valid student name is required.'); valid = false; }
-      else clearErr('studentName');
-
-      ['department','degree','batch','semester'].forEach(id => {
-        const val = document.getElementById(id).value;
-        if (!val) { showErr(id, 'Please select a valid option.'); valid = false; }
-        else clearErr(id);
-      });
-
-      const cgpa = document.getElementById('cgpa').value;
-      if (cgpa !== '' && (isNaN(cgpa) || +cgpa < 0 || +cgpa > 10)) {
-        showErr('cgpa', 'CGPA must be between 0 and 10.'); valid = false;
-      } else clearErr('cgpa');
-
-      const domains = [...document.querySelectorAll('[name="domainInterest"]:checked')];
-      if (!domains.length) { showErr('domainInterest', 'Select at least one preferred domain.'); valid = false; }
-      else clearErr('domainInterest');
-
-      const level = document.querySelector('[name="level"]:checked');
-      if (!level) { showErr('level', 'Please select your target difficulty level.'); valid = false; }
-      else clearErr('level');
-
-      return valid;
-    }
-
-    // ── Quick-Load Saved Profiles from Database ─────────────────────────────
-    let savedStudentsList = [];
-
-    async function loadSavedProfilesDropdown() {
-      try {
-        const res = await fetch('http://127.0.0.1:5001/api/students');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.students && data.students.length) {
-          savedStudentsList = data.students;
-          const sel = document.getElementById('savedProfilesSelect');
-          sel.innerHTML = '<option value="">➕ Create / Enter New Profile</option>';
-          const seen = new Set();
-          data.students.forEach(s => {
-            const key = s.name.trim().toLowerCase();
-            if (!seen.has(key)) {
-              seen.add(key);
-              const opt = document.createElement('option');
-              opt.value = s.id;
-              opt.textContent = `${s.name} (${s.department} • Sem ${s.semester})`;
-              sel.appendChild(opt);
-            }
-          });
+    // ── Enrolled Courses Management ──────────────────────────────────────────
+    function getEnrolledCourses() {
+      const raw = localStorage.getItem('srs_enrolled_courses');
+      if (raw) {
+        try {
+          return JSON.parse(raw);
+        } catch (e) {}
+      }
+      // Initial default sample courses for demo student
+      const defaults = [
+        {
+          course_id: 'COURSERA_101',
+          title: 'Deep Learning Fundamentals with Keras',
+          domain: 'Artificial Intelligence & Data Science',
+          level: 'Intermediate',
+          duration: '8 Weeks',
+          progress: 65
+        },
+        {
+          course_id: 'COURSERA_102',
+          title: 'Python for Data Structures & Algorithms',
+          domain: 'Programming & Software Engineering',
+          level: 'Intermediate',
+          duration: '6 Weeks',
+          progress: 30
         }
-      } catch (err) {
-        console.warn('Could not fetch saved students:', err);
-      }
+      ];
+      localStorage.setItem('srs_enrolled_courses', JSON.stringify(defaults));
+      return defaults;
     }
-    loadSavedProfilesDropdown();
 
-    function populateStudentProfile(student) {
-      if (!student) return;
-      document.getElementById('studentName').value = student.name || '';
-      if (student.department) document.getElementById('department').value = student.department;
-      if (student.degree) {
-        document.getElementById('degree').value = student.degree;
-        updateYears(student.degree);
-      }
-      if (student.year) {
-        document.getElementById('batch').value = student.year;
-        updateSemesters(student.year);
-      }
-      if (student.semester) {
-        document.getElementById('semester').value = student.semester;
-      }
-      if (student.cgpa !== null && student.cgpa !== undefined) {
-        document.getElementById('cgpa').value = student.cgpa;
-      }
-      if (student.completed_courses) {
-        document.getElementById('completedCourses').value = student.completed_courses;
-      }
-      if (student.current_courses) {
-        document.getElementById('currentCourses').value = student.current_courses;
-      }
-      if (student.career_goal) {
-        document.getElementById('careerGoal').value = student.career_goal;
+    function renderEnrolledCourses() {
+      const enrolled = getEnrolledCourses();
+      const container = document.getElementById('enrolledCardsRow');
+      document.getElementById('statEnrolledCount').textContent = enrolled.length;
+
+      if (enrolled.length === 0) {
+        container.innerHTML = `
+          <div class="enrolled-empty-card">
+            <div class="enrolled-empty-icon">📚</div>
+            <div class="enrolled-empty-title">No Courses Enrolled Yet</div>
+            <p class="enrolled-empty-desc">You haven't added any courses to your active schedule yet. Check your personalized AI recommendations below and click "Enroll"!</p>
+            <a href="#recommendationsSection" class="hub-btn-primary" style="font-size:0.85rem; padding:8px 16px;">Browse AI Picks ↓</a>
+          </div>
+        `;
+        return;
       }
 
-      // Check domains
-      const domains = student.domains || [];
-      document.querySelectorAll('[name="domainInterest"]').forEach(cb => {
-        cb.checked = domains.includes(cb.value);
+      container.innerHTML = enrolled.map((c, idx) => {
+        const progress = c.progress || Math.floor(Math.random() * 50) + 25;
+        const thumbClass = getThumbClass(c.domain);
+        return `
+          <div class="enrolled-card">
+            <div class="enrolled-card-header">
+              <span class="enrolled-badge">✓ Enrolled • Active</span>
+              <span style="font-size:0.75rem; color:#64748b; font-weight:600;">${c.level || 'Intermediate'}</span>
+            </div>
+            <h4 style="font-size:1rem; font-weight:700; color:#0f172a; line-height:1.35; margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.7em;">
+              ${c.title}
+            </h4>
+            <span style="font-size:0.78rem; color:#64748b;">${c.domain || 'Curricular Course'} • ${c.duration || '6 Weeks'}</span>
+            
+            <div class="enrolled-progress-wrap">
+              <div class="enrolled-progress-text">
+                <span>Course Progress</span>
+                <span>${progress}%</span>
+              </div>
+              <div class="enrolled-progress-bar">
+                <div class="enrolled-progress-fill" style="width: ${progress}%;"></div>
+              </div>
+            </div>
+
+            <div class="enrolled-card-actions">
+              <button type="button" class="enrolled-resume-btn" onclick="previewCourseDirect('${encodeURIComponent(JSON.stringify(c))}')">
+                Resume Course
+              </button>
+              <button type="button" class="enrolled-drop-btn" onclick="dropCourse(${idx})">
+                Drop
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.dropCourse = function(idx) {
+      const enrolled = getEnrolledCourses();
+      const dropped = enrolled.splice(idx, 1);
+      localStorage.setItem('srs_enrolled_courses', JSON.stringify(enrolled));
+      renderEnrolledCourses();
+      showToast(`Dropped "${dropped[0]?.title || 'course'}" from your schedule.`, 'ℹ️');
+      // Refresh recommend enroll buttons
+      updateRecommendationButtons();
+    };
+
+    window.enrollInCourse = async function(courseJsonStr) {
+      const course = JSON.parse(decodeURIComponent(courseJsonStr));
+      const enrolled = getEnrolledCourses();
+      const exists = enrolled.some(c => c.title.toLowerCase() === course.title.toLowerCase());
+
+      if (exists) {
+        showToast(`You are already enrolled in "${course.title}".`, 'ℹ️');
+        return;
+      }
+
+      enrolled.unshift({
+        course_id: course.course_id || `C_${Date.now()}`,
+        title: course.title,
+        domain: course.domain,
+        level: course.difficulty || course.level || 'Intermediate',
+        duration: course.duration || '6 Weeks',
+        progress: 10
       });
 
-      // Check level
-      const level = student.difficulty || 'Beginner';
-      const rad = document.querySelector(`[name="level"][value="${level}"]`);
-      if (rad) rad.checked = true;
+      localStorage.setItem('srs_enrolled_courses', JSON.stringify(enrolled));
+      renderEnrolledCourses();
+      showToast(`🎉 Enrolled in "${course.title}"! Added to your schedule.`);
 
-      sessionStorage.setItem('srs_active_student_id', student.id);
-    }
-
-    document.getElementById('savedProfilesSelect').addEventListener('change', function() {
-      const id = this.value;
-      if (!id) {
-        document.getElementById('profileForm').reset();
-        sessionStorage.removeItem('srs_active_student_id');
-        return;
+      // Sync with backend if student has id
+      const student = activeStudent || {};
+      const sid = student.id || localStorage.getItem('srs_student_id');
+      if (sid) {
+        try {
+          await fetch(`http://127.0.0.1:5001/api/students/${sid}/enroll`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ course_title: course.title, action: 'enroll' })
+          });
+        } catch (e) {}
       }
-      const found = savedStudentsList.find(s => String(s.id) === String(id));
-      if (found) populateStudentProfile(found);
-    });
 
-    document.getElementById('loadProfileBtn').addEventListener('click', function() {
-      const id = document.getElementById('savedProfilesSelect').value;
-      if (!id) {
-        alert('Please select an existing student profile from the dropdown.');
-        return;
-      }
-      const found = savedStudentsList.find(s => String(s.id) === String(id));
-      if (found) populateStudentProfile(found);
-    });
+      updateRecommendationButtons();
+      if (currentModalCourse) closeCourseModalDirect();
+    };
 
-    // ── Submit & Persist to Database ─────────────────────────────────────────
-    document.getElementById('profileForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      if (!validateForm()) return;
+    // ── Fetch Hybrid Recommendations ─────────────────────────────────────────
+    async function fetchRecommendations() {
+      const container = document.getElementById('recomCardsRow');
+      const student = activeStudent || {};
 
-      const submitBtn = document.querySelector('.btn-primary[type="submit"]');
-      const origText = submitBtn.textContent;
-      submitBtn.textContent = 'Saving Profile to Database...';
-      submitBtn.disabled = true;
-
-      const domains = [...document.querySelectorAll('[name="domainInterest"]:checked')].map(c => c.value);
-      const level = document.querySelector('[name="level"]:checked').value;
-      const activeId = sessionStorage.getItem('srs_active_student_id');
-
-      const profilePayload = {
-        id: activeId ? parseInt(activeId, 10) : undefined,
-        name: document.getElementById('studentName').value.trim(),
-        department: document.getElementById('department').value,
-        degree: document.getElementById('degree').value,
-        year: document.getElementById('batch').value,
-        semester: parseInt(document.getElementById('semester').value || '1', 10),
-        cgpa: document.getElementById('cgpa').value ? parseFloat(document.getElementById('cgpa').value) : null,
-        completed_courses: document.getElementById('completedCourses').value.trim(),
-        current_courses: document.getElementById('currentCourses').value.trim(),
-        domains: domains,
-        difficulty: level,
-        career_goal: document.getElementById('careerGoal').value
+      const payload = {
+        user_id: student.name || 'Student',
+        preferences: {
+          dept: student.department || 'Computer Science & Engineering',
+          degree: student.degree || 'B.Tech (4-Year)',
+          batch: student.year || '3rd Year',
+          semester: student.semester || 5,
+          domains: Array.isArray(student.domains) ? student.domains : [student.domains || 'Artificial Intelligence & Data Science'],
+          difficulty: student.difficulty || 'Intermediate',
+          career_goal: student.career_goal || 'Machine Learning Engineer',
+          completed_courses: student.completed_courses || ''
+        }
       };
 
       try {
-        const res = await fetch('http://127.0.0.1:5001/api/students', {
+        const res = await fetch('http://127.0.0.1:5001/recommend', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(profilePayload)
+          body: JSON.stringify(payload)
         });
-        if (res.ok) {
-          const resData = await res.json();
-          if (resData.student && resData.student.id) {
-            localStorage.setItem('srs_student_id', resData.student.id);
-            localStorage.setItem('srs_student_name', resData.student.name);
-          }
+
+        const data = await res.json();
+        recommendedCourses = data.recommendations || [];
+
+        if (recommendedCourses.length === 0) {
+          container.innerHTML = `<p style="padding:20px; color:#64748b;">No recommendations returned. Please check your profile preferences.</p>`;
+          return;
         }
+
+        // Set Top AI Match Score in Hero
+        const topScore = recommendedCourses[0]?.score || 0.96;
+        document.getElementById('statMatchScore').textContent = `${Math.round(topScore * 100)}%`;
+
+        renderRecommendationCards(recommendedCourses);
       } catch (err) {
-        console.warn('Could not persist profile to API, proceeding to dashboard:', err);
+        console.warn('Backend connection failed, using offline fallback recommendations:', err);
+        container.innerHTML = `
+          <div style="padding:20px; color:#ef4444; background:#fef2f2; border-radius:12px; border:1px solid #fecaca; width:100%;">
+            Unable to connect to SmartRecSys server at http://127.0.0.1:5001. Please make sure server.py is running.
+          </div>
+        `;
+      }
+    }
+
+    function renderRecommendationCards(courses) {
+      const container = document.getElementById('recomCardsRow');
+      const enrolled = getEnrolledCourses();
+
+      container.innerHTML = courses.map((c, rank) => {
+        const matchPct = Math.round((c.score || 0.85) * 100);
+        const isEnrolled = enrolled.some(e => e.title.toLowerCase() === c.title.toLowerCase());
+        const thumbClass = getThumbClass(c.domain);
+        const encodedCourse = encodeURIComponent(JSON.stringify(c));
+
+        return `
+          <div class="hub-card" id="recom-card-${rank}">
+            <div class="hub-card-thumb ${thumbClass}">
+              <div class="hub-card-top-badges">
+                <span class="hub-domain-badge" title="${c.domain}">${c.domain}</span>
+                <span class="hub-match-pill">⚡ ${matchPct}% Match</span>
+              </div>
+              <div class="hub-level-tag">
+                <span>📚</span> ${c.difficulty || 'All Levels'}
+              </div>
+            </div>
+
+            <div class="hub-card-body">
+              <h4 class="hub-card-title" title="${c.title}">${c.title}</h4>
+              <div class="hub-card-reason" title="${c.reason}">
+                💡 ${c.reason || 'Recommended to strengthen your technical competencies.'}
+              </div>
+
+              <div class="hub-card-meta">
+                <span>⏱️ ${c.duration || '6 Weeks'}</span>
+                <span>🏛️ ${c.institution || 'Campus Faculty'}</span>
+              </div>
+
+              <div class="hub-card-actions">
+                <button type="button" class="hub-enroll-btn ${isEnrolled ? 'enrolled' : ''}" 
+                        onclick="enrollInCourse('${encodedCourse}')" ${isEnrolled ? 'disabled' : ''}>
+                  ${isEnrolled ? '✓ Enrolled' : '+ Enroll Now'}
+                </button>
+                <button type="button" class="hub-preview-btn" onclick="previewCourseDirect('${encodedCourse}')">
+                  Quick View
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateRecommendationButtons() {
+      if (recommendedCourses && recommendedCourses.length > 0) {
+        renderRecommendationCards(recommendedCourses);
+      }
+    }
+
+    // ── Fetch Trending Catalog Courses ───────────────────────────────────────
+    async function fetchTrendingCourses(subject = 'all') {
+      const container = document.getElementById('trendingCardsRow');
+      container.innerHTML = `<div style="padding:24px; color:#64748b;">Filtering campus courses...</div>`;
+
+      let url = `http://127.0.0.1:5001/api/courses/catalog?limit=12&sort=trending`;
+      if (subject && subject !== 'all') {
+        url += `&subject=${encodeURIComponent(subject)}`;
       }
 
-      // Save to sessionStorage for back-navigation preservation
-      FIELDS.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) sessionStorage.setItem('srs_' + id, el.value);
-      });
-      sessionStorage.setItem('srs_domainInterest', JSON.stringify(domains));
-      sessionStorage.setItem('srs_level', level);
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const courses = data.courses || [];
 
-      // Build query string with ALL parameters
-      const params = new URLSearchParams({
-        name:              profilePayload.name,
-        dept:              profilePayload.department,
-        degree:            profilePayload.degree,
-        batch:             profilePayload.year,
-        semester:          String(profilePayload.semester),
-        cgpa:              profilePayload.cgpa !== null ? String(profilePayload.cgpa) : '',
-        completed_courses: profilePayload.completed_courses,
-        current_courses:   profilePayload.current_courses,
-        domains:           domains.join(','),
-        level:             level,
-        goal:              profilePayload.career_goal,
-      });
-      window.location.href = 'dashboard.html?' + params.toString();
-    });
+        if (courses.length === 0) {
+          container.innerHTML = `<p style="padding:20px; color:#64748b;">No courses found under this track.</p>`;
+          return;
+        }
 
-    // ── Reset ────────────────────────────────────────────────────────────────
-    document.getElementById('resetBtn').addEventListener('click', function() {
-      document.getElementById('profileForm').reset();
-      sessionStorage.clear();
-      updateYears('');
-      document.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
-    });
+        const enrolled = getEnrolledCourses();
+
+        container.innerHTML = courses.map((c) => {
+          const isEnrolled = enrolled.some(e => e.title.toLowerCase() === c.title.toLowerCase());
+          const thumbClass = getThumbClass(c.domain);
+          const encodedCourse = encodeURIComponent(JSON.stringify(c));
+
+          return `
+            <div class="hub-card">
+              <div class="hub-card-thumb ${thumbClass}">
+                <div class="hub-card-top-badges">
+                  <span class="hub-domain-badge" title="${c.domain}">${c.domain}</span>
+                  <span class="hub-match-pill" style="background:rgba(255,255,255,0.25); color:#fff; box-shadow:none;">★ ${c.rating || 4.7}</span>
+                </div>
+                <div class="hub-level-tag">
+                  <span>📖</span> ${c.difficulty || 'All Levels'}
+                </div>
+              </div>
+
+              <div class="hub-card-body">
+                <h4 class="hub-card-title" title="${c.title}">${c.title}</h4>
+                <p style="font-size:0.78rem; color:#64748b; line-height:1.4; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                  ${c.description || 'Comprehensive campus coursework.'}
+                </p>
+
+                <div class="hub-card-meta">
+                  <span>⏱️ ${c.duration || '6 Weeks'}</span>
+                  <span>👥 ${(c.subscribers || 1400).toLocaleString()} enrolled</span>
+                </div>
+
+                <div class="hub-card-actions">
+                  <button type="button" class="hub-enroll-btn ${isEnrolled ? 'enrolled' : ''}" 
+                          onclick="enrollInCourse('${encodedCourse}')" ${isEnrolled ? 'disabled' : ''}>
+                    ${isEnrolled ? '✓ Enrolled' : '+ Enroll'}
+                  </button>
+                  <button type="button" class="hub-preview-btn" onclick="previewCourseDirect('${encodedCourse}')">
+                    Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = `<p style="padding:20px; color:#ef4444;">Unable to load catalog courses.</p>`;
+      }
+    }
+
+    function setupCatalogFilterTabs() {
+      const tabs = document.querySelectorAll('#catalogFilterTabs .hub-filter-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const subject = tab.getAttribute('data-subject');
+          fetchTrendingCourses(subject);
+        });
+      });
+    }
+
+    window.filterCatalogByTrack = function(track) {
+      const tabs = document.querySelectorAll('#catalogFilterTabs .hub-filter-tab');
+      tabs.forEach(t => {
+        if (t.getAttribute('data-subject') === track) t.classList.add('active');
+        else t.classList.remove('active');
+      });
+      fetchTrendingCourses(track);
+      document.getElementById('catalogSection').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // ── Course Preview Modal ─────────────────────────────────────────────────
+    window.previewCourseDirect = function(courseJsonStr) {
+      const course = JSON.parse(decodeURIComponent(courseJsonStr));
+      currentModalCourse = course;
+
+      document.getElementById('modalTitle').textContent = course.title;
+      document.getElementById('modalDomain').textContent = course.domain || 'Curricular Course';
+      document.getElementById('modalMeta').textContent = `${course.duration || '6 Weeks'} • ${course.difficulty || course.level || 'All Levels'} • ${course.institution || 'Campus Faculty'}`;
+      document.getElementById('modalDesc').textContent = course.description || `Comprehensive e-learning masterclass covering foundational theory and applied laboratory projects in ${course.title}.`;
+
+      // Match Score & Reason
+      const matchWrap = document.getElementById('modalMatchWrap');
+      const reasonWrap = document.getElementById('modalReasonWrap');
+      if (course.score) {
+        matchWrap.style.display = 'block';
+        document.getElementById('modalMatchBadge').textContent = `⚡ ${Math.round(course.score * 100)}% Match for your profile`;
+        reasonWrap.style.display = 'block';
+        document.getElementById('modalReasonText').textContent = course.reason || 'Directly aligned with your career goal and semester standing.';
+      } else {
+        matchWrap.style.display = 'none';
+        reasonWrap.style.display = 'none';
+      }
+
+      // Skills
+      const skillsContainer = document.getElementById('modalSkills');
+      const skills = course.skills || [course.domain || 'Engineering', 'Problem Solving'];
+      skillsContainer.innerHTML = (Array.isArray(skills) ? skills : [skills]).map(s => `
+        <span style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:14px; font-size:0.75rem; font-weight:600; color:#334155; padding:3px 10px;">
+          ${s}
+        </span>
+      `).join('');
+
+      // Modal Enroll Button State
+      const enrolled = getEnrolledCourses();
+      const isEnrolled = enrolled.some(e => e.title.toLowerCase() === course.title.toLowerCase());
+      const enrollBtn = document.getElementById('modalEnrollBtn');
+      if (isEnrolled) {
+        enrollBtn.textContent = '✓ Already Enrolled';
+        enrollBtn.className = 'hub-btn-primary enrolled';
+        enrollBtn.disabled = true;
+      } else {
+        enrollBtn.textContent = '+ Enroll in Course';
+        enrollBtn.className = 'hub-btn-primary';
+        enrollBtn.disabled = false;
+        enrollBtn.onclick = () => enrollInCourse(encodeURIComponent(JSON.stringify(course)));
+      }
+
+      document.getElementById('courseModalBackdrop').classList.add('open');
+    };
+
+    window.closeCourseModalDirect = function() {
+      document.getElementById('courseModalBackdrop').classList.remove('open');
+      currentModalCourse = null;
+    };
+
+    window.closeCourseModal = function(e) {
+      if (e.target.id === 'courseModalBackdrop') {
+        closeCourseModalDirect();
+      }
+    };
+
+    // ── Horizontal Row Scrolling Helper ──────────────────────────────────────
+    window.scrollRow = function(rowId, delta) {
+      const row = document.getElementById(rowId);
+      if (row) {
+        row.scrollBy({ left: delta, behavior: 'smooth' });
+      }
+    };
+
+    // ── Toast Helper ─────────────────────────────────────────────────────────
+    function showToast(msg, icon = '✓') {
+      const toast = document.getElementById('hubToast');
+      document.getElementById('toastMsg').textContent = msg;
+      document.getElementById('toastIcon').textContent = icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    function getThumbClass(domain) {
+      const d = (domain || '').toLowerCase();
+      if (d.includes('cyber') || d.includes('security') || d.includes('cloud')) return 'cyber';
+      if (d.includes('data') || d.includes('ai') || d.includes('machine') || d.includes('intelligence')) return 'data';
+      if (d.includes('design') || d.includes('ux') || d.includes('art')) return 'design';
+      if (d.includes('finance') || d.includes('business') || d.includes('investment')) return 'finance';
+      return 'tech';
+    }
   </script>
 </body>
 </html>

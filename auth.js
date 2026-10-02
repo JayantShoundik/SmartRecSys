@@ -74,9 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
       roll:              student.roll_number || ''
     });
 
-    showAlert(`Welcome back, ${student.name}! Redirecting to Student Portal...`, true);
+    showAlert(`Welcome back, ${student.name}! Redirecting to Learning Hub...`, true);
     setTimeout(() => {
-      window.location.href = 'dashboard.html?' + params.toString();
+      window.location.href = 'home.html';
     }, 450);
   }
 
