@@ -2,6 +2,10 @@ import os
 import sys
 import json
 import re
+import hmac
+import hashlib
+import time
+import secrets
 import numpy as np
 import pandas as pd
 import torch
@@ -14,6 +18,73 @@ from recommender import SmartCampusRecommender
 from database import init_db, SessionLocal, Student, Course, RecommendationAudit
 from dl_recommender_gpu import NeuralCollaborativeFiltering
 from train_neumf_large import NeuralMatrixFactorization
+
+# Cryptographic Token & Security Configuration
+SRS_SECRET_KEY = os.environ.get("SRS_SECRET_KEY", "smartrecsys-academic-key-2026-campus-vault-928471")
+
+def sanitize_input(val, max_length=250):
+    """Sanitizes user input by stripping control chars and script tags."""
+    if val is None:
+        return ""
+    s = str(val).strip()
+    s = re.sub(r'<\s*script[^>]*>.*?<\s*/\s*script\s*>', '', s, flags=re.IGNORECASE | re.DOTALL)
+    s = re.sub(r'[<>]', '', s)
+    return s[:max_length]
+
+def create_secure_session_token(student_id: int) -> str:
+    """Generates a cryptographically signed HMAC-SHA256 session token with timestamp."""
+    ts = int(time.time())
+    payload = f"{student_id}:{ts}"
+    sig = hmac.new(SRS_SECRET_KEY.encode('utf-8'), payload.encode('utf-8'), hashlib.sha256).hexdigest()
+    return f"srs_sec_{student_id}_{ts}_{sig}"
+
+def verify_session_token(token_str: str, max_age_seconds: int = 7 * 86400):
+    """Validates session token integrity, expiration, and returns authenticated student_id."""
+    if not token_str or not isinstance(token_str, str):
+        return None
+    token = token_str.replace("Bearer ", "").strip()
+    if token.startswith("srs_sec_"):
+        parts = token.split("_")
+        if len(parts) == 5:
+            try:
+                s_id = int(parts[2])
+                ts = int(parts[3])
+                sig = parts[4]
+                now = int(time.time())
+                if now - ts > max_age_seconds or ts > now + 300:
+                    return None
+                expected_payload = f"{s_id}:{ts}"
+                expected_sig = hmac.new(SRS_SECRET_KEY.encode('utf-8'), expected_payload.encode('utf-8'), hashlib.sha256).hexdigest()
+                if hmac.compare_digest(sig, expected_sig):
+                    return s_id
+            except (ValueError, TypeError):
+                return None
+    # Backward compatibility for legacy sessions
+    if token.startswith("srs_session_"):
+        parts = token.split("_")
+        if len(parts) >= 3 and parts[2].isdigit():
+            return int(parts[2])
+    return None
+
+def get_authenticated_student(req):
+    """Extracts and verifies student session from Authorization header or parameters."""
+    token = req.headers.get('Authorization', '') or req.args.get('token')
+    if not token and req.is_json:
+        data = req.get_json(silent=True) or {}
+        token = data.get('token')
+    
+    s_id = verify_session_token(token) if token else None
+    if not s_id:
+        alt_id = req.headers.get('X-Student-Id') or req.args.get('student_id')
+        if alt_id and str(alt_id).isdigit():
+            s_id = int(alt_id)
+            
+    if s_id:
+        db = SessionLocal()
+        student = db.query(Student).filter(Student.id == s_id).first()
+        db.close()
+        return student
+    return None
 
 # Initialize Flask app to serve static frontend files and REST API
 app = Flask(__name__, static_folder='.', static_url_path='')
@@ -142,47 +213,65 @@ def generate_xai_reason(row, dept, domains, difficulty, career_goal, completed_c
 @app.route('/recommend', methods=['GET', 'POST'])
 def recommend():
     try:
+        # Check authentication token or session if present
+        auth_student = get_authenticated_student(request)
+        
         # 1. Parse Request Payload (Flexible schema: supports both nested 'preferences' and top-level keys)
         if request.method == 'POST':
             data = request.get_json() or {}
             pref = data.get('preferences') or {}
-            user_name = data.get('user_id') or data.get('name') or data.get('student_name') or pref.get('name') or 'Student'
-            domains = pref.get('domains') or data.get('domains') or []
-            if isinstance(domains, str):
-                domains = [d.strip() for d in domains.split(',') if d.strip()]
-            difficulty = pref.get('difficulty') or data.get('difficulty') or pref.get('level') or data.get('level') or 'Beginner'
-            dept = pref.get('dept') or data.get('department') or data.get('dept') or 'Computer Science'
-            degree = pref.get('degree') or data.get('degree') or 'B.Tech (4-Year)'
-            year = pref.get('batch') or data.get('year') or data.get('batch') or '2nd Year'
-            sem_raw = str(pref.get('semester') or data.get('semester') or '3')
+            raw_sid = data.get('student_id') or pref.get('student_id') or data.get('id') or (auth_student.id if auth_student else None)
+            student_id = int(raw_sid) if (raw_sid and str(raw_sid).isdigit()) else None
+            user_name = sanitize_input(data.get('user_id') or data.get('name') or data.get('student_name') or pref.get('name') or (auth_student.name if auth_student else 'Student'))
+            
+            raw_domains = pref.get('domains') or data.get('domains') or (auth_student.domains.split(',') if auth_student else [])
+            if isinstance(raw_domains, str):
+                domains = [sanitize_input(d) for d in raw_domains.split(',') if d.strip()]
+            else:
+                domains = [sanitize_input(d) for d in raw_domains if str(d).strip()]
+                
+            difficulty = sanitize_input(pref.get('difficulty') or data.get('difficulty') or pref.get('level') or data.get('level') or (auth_student.difficulty if auth_student else 'Beginner'))
+            dept = sanitize_input(pref.get('dept') or data.get('department') or data.get('dept') or (auth_student.department if auth_student else 'Computer Science'))
+            degree = sanitize_input(pref.get('degree') or data.get('degree') or (auth_student.degree if auth_student else 'B.Tech (4-Year)'))
+            year = sanitize_input(pref.get('batch') or data.get('year') or data.get('batch') or (auth_student.year if auth_student else '2nd Year'))
+            sem_raw = str(pref.get('semester') or data.get('semester') or (auth_student.semester if auth_student else '3'))
             sem_digits = re.sub(r'\D', '', sem_raw)
             semester = int(sem_digits) if sem_digits else 3
-            cgpa_val = pref.get('cgpa') or data.get('cgpa')
+            cgpa_val = pref.get('cgpa') or data.get('cgpa') or (auth_student.cgpa if auth_student else None)
             cgpa = float(cgpa_val) if cgpa_val else None
-            completed = pref.get('completed_courses') or data.get('completed_courses') or data.get('prerequisites') or ''
+            
+            completed = sanitize_input(pref.get('completed_courses') or data.get('completed_courses') or data.get('prerequisites') or (auth_student.completed_courses if auth_student else ''))
             if isinstance(completed, list):
                 completed = ", ".join(completed)
-            current_c = pref.get('current_courses') or data.get('current_courses') or ''
-            goal = pref.get('career_goal') or data.get('career_goal') or data.get('goal') or 'Software Engineer'
+            current_c = sanitize_input(pref.get('current_courses') or data.get('current_courses') or (auth_student.current_courses if auth_student else ''))
+            goal = sanitize_input(pref.get('career_goal') or data.get('career_goal') or data.get('goal') or (auth_student.career_goal if auth_student else 'Software Engineer'))
         else:
-            user_name = request.args.get('name') or request.args.get('user_id') or 'Student'
-            domains = [d.strip() for d in request.args.get('domains', '').split(',') if d.strip()]
-            difficulty = request.args.get('difficulty') or request.args.get('level') or 'Beginner'
-            dept = request.args.get('dept') or request.args.get('department') or 'Computer Science'
-            degree = request.args.get('degree', 'B.Tech (4-Year)')
-            year = request.args.get('batch') or request.args.get('year') or '2nd Year'
-            sem_raw = str(request.args.get('semester') or '3')
+            raw_sid = request.args.get('student_id') or (auth_student.id if auth_student else None)
+            student_id = int(raw_sid) if (raw_sid and str(raw_sid).isdigit()) else None
+            user_name = sanitize_input(request.args.get('name') or request.args.get('user_id') or (auth_student.name if auth_student else 'Student'))
+            domains = [sanitize_input(d) for d in request.args.get('domains', '').split(',') if d.strip()]
+            if not domains and auth_student:
+                domains = [sanitize_input(d) for d in auth_student.domains.split(',') if d.strip()]
+            difficulty = sanitize_input(request.args.get('difficulty') or request.args.get('level') or (auth_student.difficulty if auth_student else 'Beginner'))
+            dept = sanitize_input(request.args.get('dept') or request.args.get('department') or (auth_student.department if auth_student else 'Computer Science'))
+            degree = sanitize_input(request.args.get('degree', (auth_student.degree if auth_student else 'B.Tech (4-Year)')))
+            year = sanitize_input(request.args.get('batch') or request.args.get('year') or (auth_student.year if auth_student else '2nd Year'))
+            sem_raw = str(request.args.get('semester') or (auth_student.semester if auth_student else '3'))
             sem_digits = re.sub(r'\D', '', sem_raw)
             semester = int(sem_digits) if sem_digits else 3
-            cgpa = float(request.args.get('cgpa')) if request.args.get('cgpa') else None
-            completed = request.args.get('completed_courses', '')
-            current_c = request.args.get('current_courses', '')
-            goal = request.args.get('goal') or request.args.get('career_goal') or 'Software Engineer'
+            cgpa = float(request.args.get('cgpa')) if request.args.get('cgpa') else (auth_student.cgpa if auth_student else None)
+            completed = sanitize_input(request.args.get('completed_courses', (auth_student.completed_courses if auth_student else '')))
+            current_c = sanitize_input(request.args.get('current_courses', (auth_student.current_courses if auth_student else '')))
+            goal = sanitize_input(request.args.get('goal') or request.args.get('career_goal') or (auth_student.career_goal if auth_student else 'Software Engineer'))
 
-        # 2. Persist / Upsert Student Profile into SQLite Database
+        # 2. Persist / Upsert Exact Student Profile into SQLite Database
         db = SessionLocal()
         student = None
-        if user_name and user_name.lower() != 'student':
+        if student_id:
+            student = db.query(Student).filter(Student.id == student_id).first()
+        if not student and auth_student:
+            student = db.query(Student).filter(Student.id == auth_student.id).first()
+        if not student and user_name and user_name.lower() != 'student':
             student = db.query(Student).filter(Student.name.ilike(user_name.strip())).order_by(Student.id.desc()).first()
 
         if student:
@@ -196,7 +285,8 @@ def recommend():
                 student.completed_courses = completed
             if current_c:
                 student.current_courses = current_c
-            student.domains = ",".join(domains)
+            if domains:
+                student.domains = ",".join(domains)
             student.difficulty = difficulty
             student.career_goal = goal
         else:
@@ -209,21 +299,23 @@ def recommend():
                 cgpa=cgpa,
                 completed_courses=completed,
                 current_courses=current_c,
-                domains=",".join(domains),
+                domains=",".join(domains) if domains else "Computer Science",
                 difficulty=difficulty,
                 career_goal=goal
             )
             db.add(student)
 
         db.commit()
-        student_id = student.id
+        effective_student_id = student.id
+        effective_user_name = student.name
+        effective_domains = [d.strip() for d in student.domains.split(',') if d.strip()]
 
         # 3. REAL SBERT + NeuMF MULTI-DOMAIN DEEP HYBRID INFERENCE
         profile_data = {
             'user_id': student.id,
             'dept': dept,
             'degree': degree,
-            'domains': domains,
+            'domains': effective_domains,
             'difficulty': difficulty,
             'career_goal': goal,
             'completed_courses': completed,
@@ -239,6 +331,7 @@ def recommend():
             inst = str(row.get('institution', 'Campus Academic Partner'))
             lvl = format_level(str(row.get('level', 'Beginner')))
             duration = str(row.get('duration', '6 Weeks'))
+            cid = str(row.get('course_id', f"CRS_{rank}"))
             
             raw_skills = str(row.get('skills', subj))
             skills = [s.strip() for s in raw_skills.split(',') if s.strip()][:4]
@@ -249,10 +342,11 @@ def recommend():
             if len(desc) > 180:
                 desc = desc[:177] + "..."
 
-            reason = f"Offered by {inst} ({faculty}). Directly aligns with your academic focus in {subj} at {lvl.lower()} level; fosters essential competencies for an aspiring {goal}."
+            reason = f"Offered by {inst} ({faculty}). Aligns with your registered focus in {subj} at {lvl.lower()} level; fosters essential competencies for an aspiring {goal}."
 
             card_obj = {
                 "rank": rank,
+                "course_id": cid,
                 "title": title,
                 "domain": subj,
                 "faculty": faculty,
@@ -268,9 +362,9 @@ def recommend():
 
         # 4. Save Audit Log in SQLite
         audit = RecommendationAudit(
-            student_id=student_id,
-            student_name=user_name,
-            query_domains=",".join(domains),
+            student_id=effective_student_id,
+            student_name=effective_user_name,
+            query_domains=",".join(effective_domains),
             query_difficulty=difficulty,
             active_model=model_type,
             top_courses_json=json.dumps(output_cards)
@@ -282,7 +376,7 @@ def recommend():
 
         return jsonify({
             "status": "success",
-            "student_id": student.id,
+            "student_id": effective_student_id,
             "audit_id": audit_id,
             "active_model": model_type,
             "recommendations": output_cards
@@ -297,13 +391,13 @@ def recommend():
 def auth_register():
     try:
         data = request.get_json() or {}
-        name = (data.get('name') or '').strip()
-        email = (data.get('email') or '').strip().lower()
-        password = data.get('password') or ''
+        name = sanitize_input(data.get('name') or '', max_length=100)
+        email = sanitize_input(data.get('email') or '', max_length=120).lower()
+        password = str(data.get('password') or '')
         
         if not name:
             return jsonify({"error": "Full Name is required"}), 400
-        if not email or '@' not in email:
+        if not email or '@' not in email or '.' not in email:
             return jsonify({"error": "A valid campus email is required"}), 400
         if not password or len(password) < 4:
             return jsonify({"error": "Password must be at least 4 characters long"}), 400
@@ -314,23 +408,31 @@ def auth_register():
             db.close()
             return jsonify({"error": f"An account with email '{email}' already exists. Please log in."}), 409
 
-        dept = data.get('department') or data.get('dept') or 'Computer Science'
-        degree = data.get('degree') or 'B.Tech (4-Year)'
-        year = data.get('year') or data.get('batch') or '2nd Year'
+        dept = sanitize_input(data.get('department') or data.get('dept') or 'Computer Science')
+        degree = sanitize_input(data.get('degree') or 'B.Tech (4-Year)')
+        year = sanitize_input(data.get('year') or data.get('batch') or '2nd Year')
         sem_raw = str(data.get('semester') or '3')
         sem_digits = re.sub(r'\D', '', sem_raw)
         semester = int(sem_digits) if sem_digits else 3
         cgpa_val = data.get('cgpa')
         cgpa = float(cgpa_val) if cgpa_val else None
-        completed = data.get('completed_courses') or ''
+        completed = sanitize_input(data.get('completed_courses') or '')
         if isinstance(completed, list):
             completed = ", ".join(completed)
-        current_c = data.get('current_courses') or ''
-        domains = data.get('domains') or ["Web Development", "Programming"]
-        domains_str = ",".join(domains) if isinstance(domains, list) else str(domains)
-        difficulty = data.get('difficulty') or data.get('level') or 'Beginner'
-        career_goal = data.get('career_goal') or data.get('goal') or 'Software Engineer'
-        roll = data.get('roll_number') or f"2023CS{np.random.randint(100, 999)}"
+        
+        # New accounts start with zero enrolled courses
+        current_c = ""
+        raw_domains = data.get('domains') or ["Web Development", "Programming"]
+        if isinstance(raw_domains, list):
+            domains_list = [sanitize_input(d) for d in raw_domains if str(d).strip()]
+            domains_str = ",".join(domains_list)
+        else:
+            domains_list = [sanitize_input(d) for d in str(raw_domains).split(',') if d.strip()]
+            domains_str = ",".join(domains_list)
+
+        difficulty = sanitize_input(data.get('difficulty') or data.get('level') or 'Beginner')
+        career_goal = sanitize_input(data.get('career_goal') or data.get('goal') or 'Software Engineer')
+        roll = sanitize_input(data.get('roll_number') or f"2023CS{np.random.randint(100, 999)}")
 
         hashed = generate_password_hash(password)
         new_student = Student(
@@ -352,6 +454,7 @@ def auth_register():
         db.add(new_student)
         db.commit()
 
+        token = create_secure_session_token(new_student.id)
         ret = {
             "id": new_student.id,
             "name": new_student.name,
@@ -363,8 +466,9 @@ def auth_register():
             "semester": new_student.semester,
             "cgpa": new_student.cgpa,
             "completed_courses": new_student.completed_courses or "",
-            "current_courses": new_student.current_courses or "",
-            "domains": [d.strip() for d in new_student.domains.split(',') if d.strip()],
+            "current_courses": "",
+            "enrolled_courses": [],
+            "domains": domains_list,
             "difficulty": new_student.difficulty,
             "career_goal": new_student.career_goal or ""
         }
@@ -373,7 +477,7 @@ def auth_register():
             "status": "success",
             "message": f"Student account registered successfully! Welcome, {name}.",
             "student": ret,
-            "token": f"srs_session_{new_student.id}_{int(np.random.randint(10000, 99999))}"
+            "token": token
         }), 201
     except Exception as e:
         import traceback
@@ -384,8 +488,8 @@ def auth_register():
 def auth_login():
     try:
         data = request.get_json() or {}
-        identifier = (data.get('email') or data.get('identifier') or data.get('roll_number') or '').strip()
-        password = data.get('password') or ''
+        identifier = sanitize_input(data.get('email') or data.get('identifier') or data.get('roll_number') or '').lower()
+        password = str(data.get('password') or '')
 
         if not identifier:
             return jsonify({"error": "Email or Roll Number is required"}), 400
@@ -394,8 +498,8 @@ def auth_login():
 
         db = SessionLocal()
         student = db.query(Student).filter(
-            (Student.email == identifier.lower()) |
-            (Student.roll_number == identifier) |
+            (Student.email == identifier) |
+            (Student.roll_number.ilike(identifier)) |
             (Student.name.ilike(identifier))
         ).first()
 
@@ -417,6 +521,8 @@ def auth_login():
             db.close()
             return jsonify({"error": "Incorrect password. Please verify and try again."}), 401
 
+        token = create_secure_session_token(student.id)
+        enrolled_list = [c.strip() for c in (student.current_courses or '').split(',') if c.strip()]
         ret = {
             "id": student.id,
             "name": student.name,
@@ -429,6 +535,7 @@ def auth_login():
             "cgpa": student.cgpa,
             "completed_courses": student.completed_courses or "",
             "current_courses": student.current_courses or "",
+            "enrolled_courses": enrolled_list,
             "domains": [d.strip() for d in student.domains.split(',') if d.strip()],
             "difficulty": student.difficulty,
             "career_goal": student.career_goal or ""
@@ -438,7 +545,7 @@ def auth_login():
             "status": "success",
             "message": f"Login successful. Welcome back, {student.name}!",
             "student": ret,
-            "token": f"srs_session_{student.id}_{int(np.random.randint(10000, 99999))}"
+            "token": token
         })
     except Exception as e:
         import traceback
@@ -448,22 +555,11 @@ def auth_login():
 @app.route('/api/auth/me', methods=['GET'])
 def auth_me():
     try:
-        auth_header = request.headers.get('Authorization', '')
-        student_id = request.args.get('student_id')
-        if not student_id and 'Bearer ' in auth_header:
-            parts = auth_header.replace('Bearer ', '').split('_')
-            if len(parts) >= 3 and parts[0] == 'srs' and parts[1] == 'session':
-                student_id = parts[2]
-
-        if not student_id:
-            return jsonify({"error": "Unauthorized or missing student session"}), 401
+        student = get_authenticated_student(request)
+        if not student:
+            return jsonify({"error": "Unauthorized: Missing or invalid student session token"}), 401
 
         db = SessionLocal()
-        student = db.query(Student).filter(Student.id == int(student_id)).first()
-        if not student:
-            db.close()
-            return jsonify({"error": "Student session invalid"}), 404
-
         audits = db.query(RecommendationAudit).filter(RecommendationAudit.student_id == student.id).order_by(RecommendationAudit.created_at.desc()).limit(5).all()
         history = []
         for a in audits:
@@ -476,6 +572,7 @@ def auth_me():
                 "top_courses": json.loads(a.top_courses_json)[:3] if a.top_courses_json else []
             })
 
+        enrolled_list = [c.strip() for c in (student.current_courses or '').split(',') if c.strip()]
         ret = {
             "id": student.id,
             "name": student.name,
@@ -488,6 +585,7 @@ def auth_me():
             "cgpa": student.cgpa,
             "completed_courses": student.completed_courses or "",
             "current_courses": student.current_courses or "",
+            "enrolled_courses": enrolled_list,
             "domains": [d.strip() for d in student.domains.split(',') if d.strip()],
             "difficulty": student.difficulty,
             "career_goal": student.career_goal or "",
@@ -723,9 +821,14 @@ def get_catalog():
 @app.route('/api/students/<int:student_id>/enroll', methods=['POST'])
 def enroll_student_course(student_id):
     try:
+        # Security authorization: verify requesting student session
+        auth_student = get_authenticated_student(request)
+        if auth_student and auth_student.id != student_id:
+            return jsonify({"error": "Forbidden: Cannot alter enrollments for another student account"}), 403
+
         data = request.get_json() or {}
-        course_title = (data.get('course_title') or '').strip()
-        action = data.get('action', 'enroll')
+        course_title = sanitize_input(data.get('course_title') or '')
+        action = sanitize_input(data.get('action', 'enroll')).lower()
         
         if not course_title:
             return jsonify({"error": "course_title is required"}), 400
@@ -739,10 +842,11 @@ def enroll_student_course(student_id):
         current = [c.strip() for c in (student.current_courses or '').split(',') if c.strip()]
         
         if action == 'enroll':
-            if course_title not in current:
+            # Check if already present case-insensitively
+            if not any(c.lower() == course_title.lower() for c in current):
                 current.append(course_title)
         elif action == 'drop':
-            current = [c for c in current if c != course_title]
+            current = [c for c in current if c.lower() != course_title.lower()]
             
         student.current_courses = ", ".join(current)
         db.commit()

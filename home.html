@@ -253,13 +253,13 @@
     let currentModalCourse = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // 1. Initialize Active Student Profile
-      initActiveStudent();
+      // 1. Initialize Active Student Profile (syncs with /api/auth/me if logged in)
+      await initActiveStudent();
 
-      // 2. Load and Render Enrolled Courses Row
+      // 2. Load and Render Enrolled Courses Row (strictly student-isolated)
       renderEnrolledCourses();
 
-      // 3. Fetch Hybrid AI Recommendations
+      // 3. Fetch Hybrid AI Recommendations (dynamically calibrated for this exact student)
       await fetchRecommendations();
 
       // 4. Fetch Trending Catalog Courses
@@ -270,29 +270,55 @@
 
       // 6. Setup Report Button
       document.getElementById('heroPrintReportBtn').addEventListener('click', () => {
-        window.open('http://127.0.0.1:5001/api/report', '_blank');
+        const sid = activeStudent?.id || localStorage.getItem('srs_student_id') || '';
+        const url = sid ? `http://127.0.0.1:5001/api/report?student_id=${sid}` : 'http://127.0.0.1:5001/api/report';
+        window.open(url, '_blank');
       });
     });
 
-    function initActiveStudent() {
+    async function initActiveStudent() {
       const raw = localStorage.getItem('srs_session_student');
-      let student = {
-        name: 'Aarav Sharma',
-        department: 'Computer Science & Engineering',
-        degree: 'B.Tech (4-Year)',
-        year: '3rd Year',
-        semester: 5,
-        career_goal: 'Machine Learning Engineer',
-        domains: ['Artificial Intelligence & Data Science', 'Programming & Software Engineering'],
-        difficulty: 'Intermediate'
-      };
+      const token = localStorage.getItem('srs_token');
 
+      let student = null;
       if (raw) {
         try {
-          const parsed = JSON.parse(raw);
-          student = Object.assign(student, parsed);
+          student = JSON.parse(raw);
         } catch (e) {}
-      } else {
+      }
+
+      // Sync verified profile from server if session token exists
+      if (token) {
+        try {
+          const meRes = await fetch('http://127.0.0.1:5001/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (meData.student) {
+              student = meData.student;
+              localStorage.setItem('srs_session_student', JSON.stringify(student));
+              localStorage.setItem('srs_student_id', student.id);
+            }
+          }
+        } catch (e) {
+          console.warn('Could not sync /api/auth/me:', e);
+        }
+      }
+
+      if (!student) {
+        // Fallback default for unauthenticated demonstration
+        student = {
+          id: 1,
+          name: 'Campus Scholar',
+          department: 'Computer Science & Engineering',
+          degree: 'B.Tech (4-Year)',
+          year: '2nd Year',
+          semester: 3,
+          career_goal: 'Software Engineer',
+          domains: ['Web Development', 'Programming'],
+          difficulty: 'Beginner'
+        };
         localStorage.setItem('srs_session_student', JSON.stringify(student));
       }
 
@@ -307,35 +333,54 @@
       document.getElementById('chipGoal').textContent = `🎯 Target: ${student.career_goal || 'Engineering Professional'}`;
     }
 
-    // ── Enrolled Courses Management ──────────────────────────────────────────
+    // ── Enrolled Courses Management (Strictly User-Isolated) ─────────────────
+    function getEnrolledStorageKey() {
+      const sid = activeStudent?.id || localStorage.getItem('srs_student_id');
+      return sid ? `srs_enrolled_courses_${sid}` : 'srs_enrolled_courses_guest';
+    }
+
     function getEnrolledCourses() {
-      const raw = localStorage.getItem('srs_enrolled_courses');
+      const key = getEnrolledStorageKey();
+      const raw = localStorage.getItem(key);
       if (raw) {
         try {
           return JSON.parse(raw);
         } catch (e) {}
       }
-      // Initial default sample courses for demo student
-      const defaults = [
-        {
-          course_id: 'COURSERA_101',
-          title: 'Deep Learning Fundamentals with Keras',
-          domain: 'Artificial Intelligence & Data Science',
-          level: 'Intermediate',
-          duration: '8 Weeks',
-          progress: 65
-        },
-        {
-          course_id: 'COURSERA_102',
-          title: 'Python for Data Structures & Algorithms',
-          domain: 'Programming & Software Engineering',
-          level: 'Intermediate',
-          duration: '6 Weeks',
-          progress: 30
+
+      // If student has current_courses string or enrolled_courses array in their profile
+      if (activeStudent) {
+        const fromProfile = [];
+        if (Array.isArray(activeStudent.enrolled_courses) && activeStudent.enrolled_courses.length > 0) {
+          activeStudent.enrolled_courses.forEach((title, i) => {
+            fromProfile.push({
+              course_id: `C_${activeStudent.id}_${i}`,
+              title: title,
+              domain: (activeStudent.domains && activeStudent.domains[0]) || 'Academic Course',
+              level: activeStudent.difficulty || 'Intermediate',
+              duration: '6 Weeks',
+              progress: 25
+            });
+          });
+        } else if (activeStudent.current_courses && typeof activeStudent.current_courses === 'string') {
+          const titles = activeStudent.current_courses.split(',').map(s => s.trim()).filter(Boolean);
+          titles.forEach((title, i) => {
+            fromProfile.push({
+              course_id: `C_${activeStudent.id}_${i}`,
+              title: title,
+              domain: (activeStudent.domains && activeStudent.domains[0]) || 'Academic Course',
+              level: activeStudent.difficulty || 'Intermediate',
+              duration: '6 Weeks',
+              progress: 25
+            });
+          });
         }
-      ];
-      localStorage.setItem('srs_enrolled_courses', JSON.stringify(defaults));
-      return defaults;
+        localStorage.setItem(key, JSON.stringify(fromProfile));
+        return fromProfile;
+      }
+
+      // Brand new registered accounts start with 0 enrolled courses
+      return [];
     }
 
     function renderEnrolledCourses() {
@@ -345,19 +390,20 @@
 
       if (enrolled.length === 0) {
         container.innerHTML = `
-          <div class="enrolled-empty-card">
-            <div class="enrolled-empty-icon">📚</div>
-            <div class="enrolled-empty-title">No Courses Enrolled Yet</div>
-            <p class="enrolled-empty-desc">You haven't added any courses to your active schedule yet. Check your personalized AI recommendations below and click "Enroll"!</p>
-            <a href="#recommendationsSection" class="hub-btn-primary" style="font-size:0.85rem; padding:8px 16px;">Browse AI Picks ↓</a>
+          <div class="enrolled-empty-card" style="width:100%; border:2px dashed #cbd5e1; background:#f8fafc; border-radius:14px; padding:32px 24px; text-align:center;">
+            <div class="enrolled-empty-icon" style="font-size:2.2rem; margin-bottom:10px;">📚</div>
+            <div class="enrolled-empty-title" style="font-size:1.15rem; font-weight:700; color:#0f172a; margin-bottom:6px;">No Courses Enrolled Yet</div>
+            <p class="enrolled-empty-desc" style="font-size:0.9rem; color:#64748b; max-width:540px; margin:0 auto 16px;">
+              Your active schedule is currently empty. Explore your AI-recommended curriculum below and click <strong>"Enroll Now"</strong> to add courses to your personalized track!
+            </p>
+            <a href="#recommendationsSection" class="hub-btn-primary" style="font-size:0.86rem; padding:9px 18px; text-decoration:none; display:inline-block;">Browse Personalized AI Recommendations ↓</a>
           </div>
         `;
         return;
       }
 
       container.innerHTML = enrolled.map((c, idx) => {
-        const progress = c.progress || Math.floor(Math.random() * 50) + 25;
-        const thumbClass = getThumbClass(c.domain);
+        const progress = c.progress || 20;
         return `
           <div class="enrolled-card">
             <div class="enrolled-card-header">
@@ -392,18 +438,38 @@
       }).join('');
     }
 
-    window.dropCourse = function(idx) {
+    window.dropCourse = async function(idx) {
       const enrolled = getEnrolledCourses();
-      const dropped = enrolled.splice(idx, 1);
-      localStorage.setItem('srs_enrolled_courses', JSON.stringify(enrolled));
+      if (idx < 0 || idx >= enrolled.length) return;
+      const dropped = enrolled.splice(idx, 1)[0];
+      const key = getEnrolledStorageKey();
+      localStorage.setItem(key, JSON.stringify(enrolled));
       renderEnrolledCourses();
-      showToast(`Dropped "${dropped[0]?.title || 'course'}" from your schedule.`, 'ℹ️');
+      showToast(`Dropped "${dropped?.title || 'course'}" from your schedule.`, 'ℹ️');
+
+      const student = activeStudent || {};
+      const sid = student.id || localStorage.getItem('srs_student_id');
+      const token = localStorage.getItem('srs_token') || '';
+      if (sid && dropped) {
+        try {
+          const headers = { 'Content-Type': 'application/json' };
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+          await fetch(`http://127.0.0.1:5001/api/students/${sid}/enroll`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ course_title: dropped.title, action: 'drop' })
+          });
+        } catch (e) {
+          console.warn('Backend drop sync warning:', e);
+        }
+      }
+
       // Refresh recommend enroll buttons
       updateRecommendationButtons();
     };
 
     window.enrollInCourse = async function(courseJsonStr) {
-      const course = JSON.parse(decodeURIComponent(courseJsonStr));
+      const course = typeof courseJsonStr === 'string' ? JSON.parse(decodeURIComponent(courseJsonStr)) : courseJsonStr;
       const enrolled = getEnrolledCourses();
       const exists = enrolled.some(c => c.title.toLowerCase() === course.title.toLowerCase());
 
@@ -415,56 +481,74 @@
       enrolled.unshift({
         course_id: course.course_id || `C_${Date.now()}`,
         title: course.title,
-        domain: course.domain,
+        domain: course.domain || 'Curricular Course',
         level: course.difficulty || course.level || 'Intermediate',
         duration: course.duration || '6 Weeks',
         progress: 10
       });
 
-      localStorage.setItem('srs_enrolled_courses', JSON.stringify(enrolled));
+      const key = getEnrolledStorageKey();
+      localStorage.setItem(key, JSON.stringify(enrolled));
       renderEnrolledCourses();
-      showToast(`🎉 Enrolled in "${course.title}"! Added to your schedule.`);
+      showToast(`🎉 Enrolled in "${course.title}"! Added to your active schedule.`);
 
       // Sync with backend if student has id
       const student = activeStudent || {};
       const sid = student.id || localStorage.getItem('srs_student_id');
+      const token = localStorage.getItem('srs_token') || '';
       if (sid) {
         try {
+          const headers = { 'Content-Type': 'application/json' };
+          if (token) headers['Authorization'] = `Bearer ${token}`;
           await fetch(`http://127.0.0.1:5001/api/students/${sid}/enroll`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify({ course_title: course.title, action: 'enroll' })
           });
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Backend enrollment sync warning:', e);
+        }
       }
 
       updateRecommendationButtons();
       if (currentModalCourse) closeCourseModalDirect();
     };
 
-    // ── Fetch Hybrid Recommendations ─────────────────────────────────────────
+    // ── Fetch Hybrid Recommendations (AI Sentence-BERT + NeuMF Inference) ────
     async function fetchRecommendations() {
       const container = document.getElementById('recomCardsRow');
+      container.innerHTML = `<div style="padding:28px; color:#475569; font-weight:500; display:flex; align-items:center; gap:10px;">
+        <span class="hub-spin">⏳</span> Computing neural & semantic course recommendations for your academic profile...
+      </div>`;
+
       const student = activeStudent || {};
+      const token = localStorage.getItem('srs_token') || '';
 
       const payload = {
-        user_id: student.name || 'Student',
+        student_id: student.id,
+        user_id: student.id || student.name || 'Student',
+        name: student.name,
         preferences: {
+          student_id: student.id,
           dept: student.department || 'Computer Science & Engineering',
           degree: student.degree || 'B.Tech (4-Year)',
           batch: student.year || '3rd Year',
-          semester: student.semester || 5,
-          domains: Array.isArray(student.domains) ? student.domains : [student.domains || 'Artificial Intelligence & Data Science'],
+          semester: student.semester || 3,
+          domains: Array.isArray(student.domains) ? student.domains : (typeof student.domains === 'string' ? student.domains.split(',') : ['Computer Science']),
           difficulty: student.difficulty || 'Intermediate',
-          career_goal: student.career_goal || 'Machine Learning Engineer',
-          completed_courses: student.completed_courses || ''
+          career_goal: student.career_goal || 'Software Engineer',
+          completed_courses: student.completed_courses || '',
+          current_courses: student.current_courses || ''
         }
       };
 
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         const res = await fetch('http://127.0.0.1:5001/recommend', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
           body: JSON.stringify(payload)
         });
 

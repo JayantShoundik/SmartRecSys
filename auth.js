@@ -46,6 +46,34 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('srs_student_id', student.id);
     localStorage.setItem('srs_student_name', student.name);
 
+    // Initialize user-isolated course enrollments
+    const enrolledKey = `srs_enrolled_courses_${student.id}`;
+    let userCourses = [];
+    if (Array.isArray(student.enrolled_courses) && student.enrolled_courses.length > 0) {
+      userCourses = student.enrolled_courses.map((title, i) => ({
+        course_id: `C_${student.id}_${i}`,
+        title: title,
+        domain: (student.domains && student.domains[0]) || 'Academic Elective',
+        level: student.difficulty || 'Intermediate',
+        duration: '6 Weeks',
+        progress: 20
+      }));
+    } else if (student.current_courses && typeof student.current_courses === 'string') {
+      const titles = student.current_courses.split(',').map(s => s.strip ? s.strip() : s.trim()).filter(Boolean);
+      userCourses = titles.map((title, i) => ({
+        course_id: `C_${student.id}_${i}`,
+        title: title,
+        domain: (student.domains && student.domains[0]) || 'Academic Elective',
+        level: student.difficulty || 'Intermediate',
+        duration: '6 Weeks',
+        progress: 20
+      }));
+    }
+    // Set user-scoped enrollments (empty array for brand new registrations)
+    localStorage.setItem(enrolledKey, JSON.stringify(userCourses));
+    // Clear deprecated global key so other accounts never leak
+    localStorage.removeItem('srs_enrolled_courses');
+
     // Save session storage variables for dashboard & back navigation
     sessionStorage.setItem('srs_studentName', student.name);
     sessionStorage.setItem('srs_department', student.department);
@@ -59,22 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionStorage.setItem('srs_domainInterest', JSON.stringify(student.domains || []));
     sessionStorage.setItem('srs_level', student.difficulty || 'Beginner');
 
-    const params = new URLSearchParams({
-      name:              student.name,
-      dept:              student.department,
-      degree:            student.degree,
-      batch:             student.year,
-      semester:          String(student.semester),
-      cgpa:              student.cgpa !== null ? String(student.cgpa) : '',
-      completed_courses: student.completed_courses || '',
-      current_courses:   student.current_courses || '',
-      domains:           (student.domains || []).join(','),
-      level:             student.difficulty || 'Beginner',
-      goal:              student.career_goal || 'Software Engineer',
-      roll:              student.roll_number || ''
-    });
-
-    showAlert(`Welcome back, ${student.name}! Redirecting to Learning Hub...`, true);
+    showAlert(`Welcome, ${student.name}! Redirecting to Learning Hub...`, true);
     setTimeout(() => {
       window.location.href = 'home.html';
     }, 450);

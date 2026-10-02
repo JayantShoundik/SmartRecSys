@@ -458,7 +458,12 @@
       const diffRadio = document.querySelector('input[name="difficulty"]:checked');
       const difficulty = diffRadio ? diffRadio.value : 'Intermediate';
 
+      const currentStudent = JSON.parse(localStorage.getItem('srs_session_student') || '{}');
+      const studentId = currentStudent.id || localStorage.getItem('srs_student_id');
+      const token = localStorage.getItem('srs_token') || '';
+
       const payload = {
+        id: studentId ? parseInt(studentId) : undefined,
         name: document.getElementById('profName').value.trim() || 'Student',
         department: document.getElementById('profDept').value,
         degree: document.getElementById('profDegree').value,
@@ -472,36 +477,41 @@
       };
 
       // 1. Save to LocalStorage
-      localStorage.setItem('srs_session_student', JSON.stringify(payload));
+      const merged = Object.assign({}, currentStudent, payload);
+      localStorage.setItem('srs_session_student', JSON.stringify(merged));
       localStorage.setItem('srs_student_name', payload.name);
 
       // 2. Persist to SQLite via API
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         const res = await fetch('http://127.0.0.1:5001/api/students', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if (data.student_id) {
-          payload.id = data.student_id;
-          localStorage.setItem('srs_session_student', JSON.stringify(payload));
-          localStorage.setItem('srs_student_id', data.student_id);
+        if (data.student && data.student.id) {
+          merged.id = data.student.id;
+          localStorage.setItem('srs_session_student', JSON.stringify(merged));
+          localStorage.setItem('srs_student_id', data.student.id);
         }
       } catch (err) {
         console.warn('Could not sync to backend:', err);
       }
 
-      updateHeaderDisplay(payload);
+      updateHeaderDisplay(merged);
       showToast('Profile updated & synchronized! Recalculating AI courses...');
       setTimeout(() => {
         window.location.href = 'home.html';
-      }, 1200);
+      }, 1000);
     }
 
     function applyPreset(name) {
       const presets = {
         'Aarav Sharma': {
+          id: 1,
           name: 'Aarav Sharma',
           department: 'Computer Science & Engineering',
           degree: 'B.Tech (4-Year)',
@@ -514,6 +524,7 @@
           completed_courses: 'Python Programming, Data Structures, Discrete Mathematics'
         },
         'Priya Patel': {
+          id: 2,
           name: 'Priya Patel',
           department: 'Information Technology',
           degree: 'B.Tech (4-Year)',
@@ -526,6 +537,7 @@
           completed_courses: 'Introduction to Computing'
         },
         'Rohan Verma': {
+          id: 3,
           name: 'Rohan Verma',
           department: 'Electronics & Communication Engineering',
           degree: 'B.Tech (4-Year)',
@@ -538,6 +550,7 @@
           completed_courses: 'C++ Programming, Digital Systems'
         },
         'Ananya Iyer': {
+          id: 4,
           name: 'Ananya Iyer',
           department: 'Computer Science & Engineering',
           degree: 'BCA (3-Year)',
@@ -554,21 +567,26 @@
       const p = presets[name];
       if (!p) return;
       localStorage.setItem('srs_session_student', JSON.stringify(p));
+      localStorage.setItem('srs_student_id', p.id);
       loadStudentProfileData();
+      renderProfileEnrollments();
       showToast(`Loaded ${p.name} profile preset!`);
     }
 
     function renderProfileEnrollments() {
       const list = document.getElementById('profileEnrolledList');
-      const enrolled = JSON.parse(localStorage.getItem('srs_enrolled_courses') || '[]');
+      const student = JSON.parse(localStorage.getItem('srs_session_student') || '{}');
+      const studentId = student.id || localStorage.getItem('srs_student_id');
+      const enrolledKey = studentId ? `srs_enrolled_courses_${studentId}` : 'srs_enrolled_courses_guest';
+      const enrolled = JSON.parse(localStorage.getItem(enrolledKey) || '[]');
 
       if (enrolled.length === 0) {
         list.innerHTML = `
-          <div class="enrolled-empty-card">
-            <div class="enrolled-empty-icon">📚</div>
-            <div class="enrolled-empty-title">No Courses Enrolled Yet</div>
-            <p class="enrolled-empty-desc">You haven't enrolled in any elective courses yet. Explore your AI recommended curriculum on the Home dashboard!</p>
-            <a href="home.html#recommendationsSection" class="hub-btn-primary">Browse Recommended Courses →</a>
+          <div class="enrolled-empty-card" style="padding:28px 20px; text-align:center; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px;">
+            <div class="enrolled-empty-icon" style="font-size:2rem; margin-bottom:8px;">📚</div>
+            <div class="enrolled-empty-title" style="font-weight:700; color:#0f172a; margin-bottom:4px;">No Courses Enrolled Yet</div>
+            <p class="enrolled-empty-desc" style="font-size:0.88rem; color:#64748b; margin-bottom:12px;">You haven't added any elective courses to your schedule yet. Explore your AI recommended curriculum on the Home dashboard!</p>
+            <a href="home.html#recommendationsSection" class="hub-btn-primary" style="font-size:0.84rem; padding:8px 16px; text-decoration:none;">Browse Recommended Courses →</a>
           </div>
         `;
         return;
@@ -592,12 +610,32 @@
       `).join('');
     }
 
-    window.dropCourseFromProfile = function(idx) {
-      const enrolled = JSON.parse(localStorage.getItem('srs_enrolled_courses') || '[]');
-      const dropped = enrolled.splice(idx, 1);
-      localStorage.setItem('srs_enrolled_courses', JSON.stringify(enrolled));
+    window.dropCourseFromProfile = async function(idx) {
+      const student = JSON.parse(localStorage.getItem('srs_session_student') || '{}');
+      const studentId = student.id || localStorage.getItem('srs_student_id');
+      const enrolledKey = studentId ? `srs_enrolled_courses_${studentId}` : 'srs_enrolled_courses_guest';
+      const enrolled = JSON.parse(localStorage.getItem(enrolledKey) || '[]');
+      if (idx < 0 || idx >= enrolled.length) return;
+
+      const dropped = enrolled.splice(idx, 1)[0];
+      localStorage.setItem(enrolledKey, JSON.stringify(enrolled));
       renderProfileEnrollments();
-      showToast(`Dropped "${dropped[0]?.title || 'course'}" from schedule`);
+      showToast(`Dropped "${dropped?.title || 'course'}" from schedule`);
+
+      const token = localStorage.getItem('srs_token') || '';
+      if (studentId && dropped) {
+        try {
+          const headers = { 'Content-Type': 'application/json' };
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+          await fetch(`http://127.0.0.1:5001/api/students/${studentId}/enroll`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ course_title: dropped.title, action: 'drop' })
+          });
+        } catch (e) {
+          console.warn('Backend drop sync warning:', e);
+        }
+      }
     };
 
     async function loadAuditHistory() {
@@ -606,35 +644,38 @@
 
       const student = JSON.parse(localStorage.getItem('srs_session_student') || '{}');
       const studentId = student.id || localStorage.getItem('srs_student_id') || 1;
+      const token = localStorage.getItem('srs_token') || '';
 
       try {
-        const res = await fetch(`http://127.0.0.1:5001/api/students/${studentId}`);
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(`http://127.0.0.1:5001/api/students/${studentId}`, { headers });
         const data = await res.json();
         const audits = data.student?.audit_history || [];
 
         if (audits.length === 0) {
           container.innerHTML = `
-            <div class="enrolled-empty-card">
-              <div class="enrolled-empty-icon">🛡️</div>
-              <div class="enrolled-empty-title">No Audit Logs Recorded Yet</div>
-              <p class="enrolled-empty-desc">Audit logs are automatically generated whenever you run recommendations on the Home dashboard.</p>
+            <div class="enrolled-empty-card" style="padding:28px 20px; text-align:center; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px;">
+              <div class="enrolled-empty-icon" style="font-size:2rem; margin-bottom:8px;">🛡️</div>
+              <div class="enrolled-empty-title" style="font-weight:700; color:#0f172a; margin-bottom:4px;">No Audit Logs Recorded Yet</div>
+              <p class="enrolled-empty-desc" style="font-size:0.88rem; color:#64748b;">Audit logs are automatically cryptographically logged whenever you run recommendations on the Home dashboard.</p>
             </div>
           `;
           return;
         }
 
         container.innerHTML = audits.map(a => `
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <strong style="color:#0f172a; font-size:0.95rem;">Audit #${a.audit_id} • ${a.model_used}</strong>
-              <span style="font-size:0.75rem; color:#64748b;">${a.timestamp}</span>
+              <strong style="color:#0f172a; font-size:0.95rem;">Audit #${a.audit_id} • ${a.model || a.active_model || 'SmartRecSys Deep Hybrid'}</strong>
+              <span style="font-size:0.75rem; color:#64748b;">${a.date || a.timestamp}</span>
             </div>
             <p style="font-size:0.82rem; color:#475569; margin-bottom:10px;">
               Target Domains: <strong>${a.query_domains}</strong> • Difficulty: <strong>${a.query_difficulty}</strong>
             </p>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              ${(a.courses || []).map(c => `
-                <span style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:3px 8px; font-size:0.75rem; color:#1e293b;">
+              ${(a.top_courses || a.courses || []).map(c => `
+                <span style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:4px 8px; font-size:0.75rem; color:#1e293b; font-weight:500;">
                   ${c.title} (${Math.round((c.score || 0.85) * 100)}% Match)
                 </span>
               `).join('')}
