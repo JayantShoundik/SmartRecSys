@@ -230,9 +230,27 @@ def recommend():
             else:
                 domains = [sanitize_input(d) for d in raw_domains if str(d).strip()]
                 
-            difficulty = sanitize_input(pref.get('difficulty') or data.get('difficulty') or pref.get('level') or data.get('level') or (auth_student.difficulty if auth_student else 'Beginner'))
-            dept = sanitize_input(pref.get('dept') or data.get('department') or data.get('dept') or (auth_student.department if auth_student else 'Computer Science'))
             degree = sanitize_input(pref.get('degree') or data.get('degree') or (auth_student.degree if auth_student else 'B.Tech (4-Year)'))
+            dept_raw = pref.get('dept') or data.get('department') or data.get('dept') or (auth_student.department if auth_student else '')
+            if not dept_raw or dept_raw == 'Computer Science':
+                if any(k in degree.lower() for k in ["b.des", "design", "arts"]):
+                    dept = "School of Design & Creative Arts"
+                elif any(k in degree.lower() for k in ["mba", "bba", "management"]):
+                    dept = "School of Business & Management (MBA)"
+                else:
+                    dept = "Computer Science"
+            else:
+                dept = sanitize_input(dept_raw)
+
+            if not domains:
+                if any(k in degree.lower() for k in ["b.des", "design", "arts"]):
+                    domains = ["UI/UX & Graphic Design"]
+                elif any(k in degree.lower() for k in ["mba", "bba", "management"]):
+                    domains = ["Corporate Finance & Investment", "Business Finance"]
+                else:
+                    domains = ["Programming & Software Engineering"]
+
+            difficulty = sanitize_input(pref.get('difficulty') or data.get('difficulty') or pref.get('level') or data.get('level') or (auth_student.difficulty if auth_student else 'Beginner'))
             year = sanitize_input(pref.get('batch') or data.get('year') or data.get('batch') or (auth_student.year if auth_student else '2nd Year'))
             sem_raw = str(pref.get('semester') or data.get('semester') or (auth_student.semester if auth_student else '3'))
             sem_digits = re.sub(r'\D', '', sem_raw)
@@ -244,17 +262,35 @@ def recommend():
             if isinstance(completed, list):
                 completed = ", ".join(completed)
             current_c = sanitize_input(pref.get('current_courses') or data.get('current_courses') or (auth_student.current_courses if auth_student else ''))
-            goal = sanitize_input(pref.get('career_goal') or data.get('career_goal') or data.get('goal') or (auth_student.career_goal if auth_student else 'Software Engineer'))
+            goal = sanitize_input(pref.get('career_goal') or data.get('career_goal') or data.get('goal') or (auth_student.career_goal if auth_student else ('UI/UX & Product Designer' if 'design' in degree.lower() else 'Software Engineer')))
         else:
             raw_sid = request.args.get('student_id') or (auth_student.id if auth_student else None)
             student_id = int(raw_sid) if (raw_sid and str(raw_sid).isdigit()) else None
             user_name = sanitize_input(request.args.get('name') or request.args.get('user_id') or (auth_student.name if auth_student else 'Student'))
-            domains = [sanitize_input(d) for d in request.args.get('domains', '').split(',') if d.strip()]
-            if not domains and auth_student:
-                domains = [sanitize_input(d) for d in auth_student.domains.split(',') if d.strip()]
-            difficulty = sanitize_input(request.args.get('difficulty') or request.args.get('level') or (auth_student.difficulty if auth_student else 'Beginner'))
-            dept = sanitize_input(request.args.get('dept') or request.args.get('department') or (auth_student.department if auth_student else 'Computer Science'))
             degree = sanitize_input(request.args.get('degree', (auth_student.degree if auth_student else 'B.Tech (4-Year)')))
+            dept_raw = request.args.get('dept') or request.args.get('department') or (auth_student.department if auth_student else '')
+            if not dept_raw or dept_raw == 'Computer Science':
+                if any(k in degree.lower() for k in ["b.des", "design", "arts"]):
+                    dept = "School of Design & Creative Arts"
+                elif any(k in degree.lower() for k in ["mba", "bba", "management"]):
+                    dept = "School of Business & Management (MBA)"
+                else:
+                    dept = "Computer Science"
+            else:
+                dept = sanitize_input(dept_raw)
+
+            domains = [sanitize_input(d) for d in request.args.get('domains', '').split(',') if d.strip()]
+            if not domains:
+                if auth_student and auth_student.domains:
+                    domains = [sanitize_input(d) for d in auth_student.domains.split(',') if d.strip()]
+                elif any(k in degree.lower() for k in ["b.des", "design", "arts"]):
+                    domains = ["UI/UX & Graphic Design"]
+                elif any(k in degree.lower() for k in ["mba", "bba", "management"]):
+                    domains = ["Corporate Finance & Investment", "Business Finance"]
+                else:
+                    domains = ["Programming & Software Engineering"]
+
+            difficulty = sanitize_input(request.args.get('difficulty') or request.args.get('level') or (auth_student.difficulty if auth_student else 'Beginner'))
             year = sanitize_input(request.args.get('batch') or request.args.get('year') or (auth_student.year if auth_student else '2nd Year'))
             sem_raw = str(request.args.get('semester') or (auth_student.semester if auth_student else '3'))
             sem_digits = re.sub(r'\D', '', sem_raw)

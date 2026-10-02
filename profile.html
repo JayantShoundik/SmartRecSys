@@ -370,7 +370,41 @@
         applyPreset(val);
       });
 
-      // 6. Print Report button
+      // 6. Degree Selection Change Handler (Automatically aligns Department & Domains)
+      const degreeSelect = document.getElementById('profDegree');
+      if (degreeSelect) {
+        degreeSelect.addEventListener('change', (e) => {
+          const val = e.target.value.toLowerCase();
+          const deptSelect = document.getElementById('profDept');
+          const goalInput = document.getElementById('profGoal');
+
+          if (val.includes('b.des') || val.includes('design')) {
+            deptSelect.value = 'Design & Creative Arts';
+            document.querySelectorAll('#domainsContainer .tag-selectable').forEach(el => {
+              const dv = el.getAttribute('data-val');
+              if (dv.includes('Design') || dv.includes('Creative')) el.classList.add('selected');
+              else el.classList.remove('selected');
+            });
+            if (!goalInput.value || goalInput.value === 'Software Engineer') {
+              goalInput.value = 'UI/UX & Product Designer';
+            }
+          } else if (val.includes('mba') || val.includes('bba')) {
+            deptSelect.value = 'School of Business & Management (MBA)';
+            document.querySelectorAll('#domainsContainer .tag-selectable').forEach(el => {
+              const dv = el.getAttribute('data-val');
+              if (dv.includes('Business') || dv.includes('Finance')) el.classList.add('selected');
+              else el.classList.remove('selected');
+            });
+            if (!goalInput.value || goalInput.value === 'Software Engineer') {
+              goalInput.value = 'Financial & Business Analyst';
+            }
+          } else if (val.includes('b.tech') || val.includes('bca') || val.includes('m.tech')) {
+            deptSelect.value = 'Computer Science & Engineering';
+          }
+        });
+      }
+
+      // 7. Print Report button
       document.getElementById('printReportBtn').addEventListener('click', () => {
         window.open('http://127.0.0.1:5001/api/report', '_blank');
       });
@@ -449,11 +483,22 @@
     }
 
     async function saveProfileData() {
+      const degreeVal = document.getElementById('profDegree').value;
       const selectedDomains = [];
       document.querySelectorAll('#domainsContainer .tag-selectable.selected').forEach(c => {
         selectedDomains.push(c.getAttribute('data-val'));
       });
-      if (selectedDomains.length === 0) selectedDomains.push("Computer Science & Engineering");
+
+      // Degree-Aware domain fallback if student left domains unclicked
+      if (selectedDomains.length === 0) {
+        if (degreeVal.includes('B.Des') || degreeVal.includes('Design')) {
+          selectedDomains.push("UI/UX & Graphic Design");
+        } else if (degreeVal.includes('MBA') || degreeVal.includes('BBA')) {
+          selectedDomains.push("Corporate Finance & Investment");
+        } else {
+          selectedDomains.push("Computer Science & Engineering");
+        }
+      }
 
       const diffRadio = document.querySelector('input[name="difficulty"]:checked');
       const difficulty = diffRadio ? diffRadio.value : 'Intermediate';

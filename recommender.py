@@ -238,45 +238,89 @@ class SmartCampusRecommender:
         else:
             sim_neu = np.zeros(num_courses)
 
-        # 4. Domain & Faculty Affinity Gating
+        # 4. Academic Degree Sanity & Faculty Affinity Gating
         domain_scores = np.zeros(num_courses)
         faculty_scores = np.zeros(num_courses)
-        
-        target_domains_lower = [d.lower() for d in domains]
+        disqualified_mask = np.zeros(num_courses, dtype=bool)
+
+        degree_lower = degree.lower()
+        candidate_titles = self.df['clean_title'].values
         candidate_domains = self.df['domain'].str.lower().values
         candidate_faculties = self.df['faculty'].str.lower().values
-        degree_lower = degree.lower()
+
+        # If student is in a Creative / Design Degree (B.Des / Design / Arts)
+        is_design_degree = any(k in degree_lower for k in ["b.des", "design", "arts", "multimedia"])
+        # If student is in a Business / Management Degree (MBA / BBA)
+        is_business_degree = any(k in degree_lower for k in ["mba", "bba", "management", "business"])
+        # If student is in a Computing / Tech Degree (B.Tech / BCA / M.Tech / BS)
+        is_tech_degree = any(k in degree_lower for k in ["b.tech", "m.tech", "bca", "mca", "computing", "software"])
+
+        # Auto-align domains if left unspecified
+        if not domains:
+            if is_design_degree:
+                domains = ["UI/UX & Graphic Design"]
+            elif is_business_degree:
+                domains = ["Corporate Finance & Investment", "Business Finance"]
+            else:
+                domains = ["Programming & Software Engineering"]
+
+        target_domains_lower = [d.lower() for d in domains]
+
+        # Hard Tech / Low-level keywords incompatible with non-tech tracks
+        hard_tech_keywords = [
+            "fpga", "embedded", "c++", "compiler", "assembly", "microcontroller", 
+            "kernel", "operating system", "vlsi", "verilog", "vhdl", "circuit", 
+            "signal processing", "robotics hardware", "linear algebra for engineers"
+        ]
 
         for i in range(num_courses):
+            c_title = candidate_titles[i]
             c_dom = candidate_domains[i]
             c_fac = candidate_faculties[i]
 
-            # Domain alignment
-            for td in target_domains_lower:
-                if td in c_dom or c_dom in td:
-                    domain_scores[i] = max(domain_scores[i], 1.0)
-                elif any(word in c_dom for word in td.split() if len(word) > 3):
-                    domain_scores[i] = max(domain_scores[i], 0.70)
-
-            # Degree / Faculty alignment
-            if "mba" in degree_lower or "bba" in degree_lower or "management" in degree_lower:
-                if "business" in c_fac or "management" in c_fac:
+            # 1. Degree Sanity Filters (Prevents recommending C++/FPGA to Design or MBA students)
+            if is_design_degree:
+                # If course is hard-tech or low-level embedded hardware, strictly disqualify
+                if any(kw in c_title or kw in c_dom for kw in hard_tech_keywords):
+                    disqualified_mask[i] = True
+                    continue
+                # If candidate is from Design or UI/UX
+                if "design" in c_fac or "design" in c_dom:
                     faculty_scores[i] = 1.0
-                elif "computing" in c_fac or "science" in c_fac:
-                    faculty_scores[i] = 0.30
-            elif "m.sc" in degree_lower or "b.sc" in degree_lower or "science" in degree_lower:
-                if "natural science" in c_fac or "mathematics" in c_fac:
-                    faculty_scores[i] = 1.0
+                    domain_scores[i] = 1.0
+                elif any(kw in c_title or kw in c_dom for kw in ["web design", "html", "css", "interface", "frontend", "creative", "ui", "ux"]):
+                    faculty_scores[i] = 0.90
+                    domain_scores[i] = 0.90
                 elif "computing" in c_fac:
-                    faculty_scores[i] = 0.60
-            elif "b.tech" in degree_lower or "m.tech" in degree_lower or "bca" in degree_lower or "mca" in degree_lower:
+                    # Non-design engineering courses heavily discounted for B.Des
+                    faculty_scores[i] = 0.10
+
+            elif is_business_degree:
+                if any(kw in c_title or kw in c_dom for kw in hard_tech_keywords):
+                    disqualified_mask[i] = True
+                    continue
+                if "business" in c_fac or "finance" in c_dom or "management" in c_fac:
+                    faculty_scores[i] = 1.0
+                    domain_scores[i] = 1.0
+                else:
+                    faculty_scores[i] = 0.15
+
+            elif is_tech_degree:
                 if "computing" in c_fac or "engineering" in c_fac:
                     faculty_scores[i] = 1.0
                 elif "design" in c_fac:
                     faculty_scores[i] = 0.50
-            elif "design" in degree_lower or "arts" in degree_lower or "humanities" in degree_lower:
-                if "design" in c_fac or "humanities" in c_fac:
-                    faculty_scores[i] = 1.0
+                else:
+                    faculty_scores[i] = 0.20
+            else:
+                faculty_scores[i] = 0.50
+
+            # General Domain alignment boost
+            for td in target_domains_lower:
+                if td in c_dom or c_dom in td:
+                    domain_scores[i] = max(domain_scores[i], 1.0)
+                elif any(word in c_dom for word in td.split() if len(word) > 3):
+                    domain_scores[i] = max(domain_scores[i], 0.75)
 
         # 5. Cognitive Difficulty Alignment
         level_vals = self.df['level'].str.lower().values
@@ -300,7 +344,6 @@ class SmartCampusRecommender:
                 else: diff_scores[i] = 0.30
 
         # 6. Master Calibrated Hybrid Fusion
-        # Normalize continuous outputs
         def norm(v):
             r = v.max() - v.min()
             return (v - v.min()) / (r + 1e-8) if r > 0 else v
@@ -310,21 +353,19 @@ class SmartCampusRecommender:
 
         # Multi-objective weighted score
         final_scores = (
-            0.40 * s_sem_norm +
-            0.25 * domain_scores +
-            0.15 * faculty_scores +
-            0.10 * diff_scores +
-            0.10 * s_neu_norm
+            0.30 * s_sem_norm +
+            0.35 * domain_scores +
+            0.25 * faculty_scores +
+            0.05 * diff_scores +
+            0.05 * s_neu_norm
         )
 
-        # Calibrate match percentage into [70% - 98%] for top realistic matches
+        # Calibrate match percentage into [70% - 98%] for realistic matches
         calibrated = 0.68 + (final_scores * 0.30)
         calibrated = np.clip(calibrated, 0.65, 0.98)
 
-        # Filter out completely irrelevant faculties if domain was explicitly stated
-        if len(domains) > 0:
-            unmatched = (domain_scores == 0) & (faculty_scores == 0)
-            calibrated[unmatched] = 0.20
+        # Apply Hard Disqualification Mask (C++/FPGA for Design students = 0.0)
+        calibrated[disqualified_mask] = 0.05
 
         top_indices = np.argsort(calibrated)[::-1][:top_n]
         results = self.df.iloc[top_indices].copy()
