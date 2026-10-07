@@ -2453,8 +2453,9 @@
         Object.assign(student, payload);
         saveRegisteredStudent(student);
         return student;
-      }}
+      }
       const demo = DEMO_STUDENTS.find(s => s.id === numId);
+
       if (demo) {
         const updated = Object.assign({}, demo, payload);
         saveRegisteredStudent(updated);
