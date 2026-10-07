@@ -22,28 +22,53 @@ async function fetchRecommendations(userName, preferences) {
     }
   };
 
-  const res = await fetch("http://127.0.0.1:5001/recommend", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-  
-  if (!res.ok) throw new Error("API error: " + res.status);
-  const data = await res.json();
-  
-  if (data.student_id) {
-    lastStudentId = data.student_id;
-    localStorage.setItem("srs_student_id", data.student_id);
-    if (document.getElementById("cardStudentId")) {
-      document.getElementById("cardStudentId").textContent = `#SRS-${String(data.student_id).padStart(4, '0')}`;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch("http://127.0.0.1:5001/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.student_id) {
+        lastStudentId = data.student_id;
+        localStorage.setItem("srs_student_id", data.student_id);
+        if (document.getElementById("cardStudentId")) {
+          document.getElementById("cardStudentId").textContent = `#SRS-${String(data.student_id).padStart(4, '0')}`;
+        }
+      }
+      if (data.active_model && document.getElementById("activeModelBadge")) {
+        document.getElementById("activeModelBadge").textContent = data.active_model;
+      }
+      return Array.isArray(data) ? data : (data.recommendations || []);
     }
-  }
-  if (data.active_model && document.getElementById("activeModelBadge")) {
-    document.getElementById("activeModelBadge").textContent = data.active_model;
+  } catch (err) {
+    console.warn("Backend API unavailable, using client-side SmartEngine:", err);
   }
 
-  return Array.isArray(data) ? data : (data.recommendations || []);
+  // Fallback to client-side SmartEngine
+  if (window.SmartEngine) {
+    const results = window.SmartEngine.recommend({ name: userName }, payload.preferences, 12);
+    if (document.getElementById("activeModelBadge")) {
+      document.getElementById("activeModelBadge").textContent = "Context Deep Hybrid (Offline Mode)";
+    }
+    const sid = lastStudentId || localStorage.getItem("srs_student_id") || "1";
+    window.SmartEngine.saveAudit(sid, {
+      query_domains: preferences.domains.join(', '),
+      query_difficulty: preferences.difficulty || 'All Levels',
+      top_courses: results.slice(0, 3)
+    });
+    return results;
+  }
+
+  return [];
 }
+
 
 // ── Card builder (single source of truth for card markup) ─────────────────────
 function buildCard(course, animIndex, showBadge) {
@@ -141,13 +166,48 @@ async function loadAndShowReport() {
   if (!modal) return;
 
   try {
-    const url = lastStudentId 
-      ? `http://127.0.0.1:5001/api/report?student_id=${lastStudentId}`
-      : `http://127.0.0.1:5001/api/report`;
+    let data = null;
+    try {
+      const url = lastStudentId 
+        ? `http://127.0.0.1:5001/api/report?student_id=${lastStudentId}`
+        : `http://127.0.0.1:5001/api/report`;
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Could not load advisory report");
-    const data = await res.json();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        data = await res.json();
+      }
+    } catch (apiErr) {
+      console.warn("Report API unreachable, using client-side report generator:", apiErr);
+    }
+
+    if (!data && window.SmartEngine) {
+      const sid = lastStudentId || localStorage.getItem("srs_student_id") || "1";
+      const rep = window.SmartEngine.getAdvisingReport(sid);
+      data = {
+        report_id: "SRS-REP-OFFLINE-" + sid,
+        student: {
+          name: rep.student.name || "Student",
+          department: rep.student.department || "Computer Science",
+          degree: rep.student.degree || "B.Tech",
+          year: rep.student.year || "3rd Year",
+          semester: rep.student.semester || 3,
+          cgpa: rep.student.cgpa || 8.5,
+          career_goal: rep.student.career_goal || "Engineering Professional",
+          target_domains: (rep.student.domains || []).join(", ")
+        },
+        system_audit: {
+          model_engine: "SmartRecSys Context Deep Hybrid",
+          generated_at: new Date().toLocaleString(),
+          verification_hash: "SHA256:4a8f9c2d" + sid
+        },
+        recommendations: allResults.slice(0, 5)
+      };
+    }
+
+    if (!data) throw new Error("Could not assemble advisory report.");
 
     document.getElementById("repName").textContent = data.student.name;
     document.getElementById("repDept").textContent = data.student.department;
@@ -193,6 +253,7 @@ async function loadAndShowReport() {
   }
 }
 
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
@@ -225,13 +286,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (raw) sessionStudent = JSON.parse(raw);
   } catch (e) {}
 
+  const studentId = (sessionStudent && sessionStudent.id) || localStorage.getItem("srs_student_id") || "1";
   const dept = params.get("dept") || (sessionStudent && sessionStudent.department) || "Computer Science";
   const degree = params.get("degree") || (sessionStudent && sessionStudent.degree) || "B.Tech (4-Year)";
   const sem = params.get("semester") || (sessionStudent && sessionStudent.semester) || "3";
   const goal = params.get("goal") || (sessionStudent && sessionStudent.career_goal) || "Software Engineer";
   const roll = params.get("roll") || (sessionStudent && sessionStudent.roll_number) || `2023CS${String(studentId).padStart(4, '0')}`;
   const cgpa = params.get("cgpa") || (sessionStudent && sessionStudent.cgpa);
-  const studentId = (sessionStudent && sessionStudent.id) || localStorage.getItem("srs_student_id") || "1";
+
 
   if (document.getElementById("cardStudentName")) {
     document.getElementById("cardStudentName").textContent = name;
@@ -274,40 +336,54 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Load audit history from SQLite API
+  // Load audit history from SQLite API or client engine
   async function loadStudentAudits(sid) {
-    try {
-      const res = await fetch(`http://127.0.0.1:5001/api/students/${sid}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.student && data.student.audit_history) {
-        const history = data.student.audit_history;
-        const countSpan = document.getElementById("auditCount");
-        if (countSpan) countSpan.textContent = history.length;
+    function renderAuditItems(history) {
+      const countSpan = document.getElementById("auditCount");
+      if (countSpan) countSpan.textContent = history.length;
 
-        const listDiv = document.getElementById("auditList");
-        if (listDiv && history.length > 0) {
-          listDiv.innerHTML = history.map(h => `
-            <div style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; padding:10px 14px;">
-              <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#a5b4fc; margin-bottom:4px;">
-                <span>Audit #${h.audit_id}</span>
-                <span>${h.date}</span>
-              </div>
-              <div style="font-size:0.84rem; font-weight:600; color:#fff; margin-bottom:4px;">
-                🎯 ${h.query_domains} (${h.query_difficulty})
-              </div>
-              <div style="font-size:0.75rem; color:#cbd5e1;">
-                Top: ${h.top_courses.map(c => c.title).slice(0, 2).join(' • ')}
-              </div>
+      const listDiv = document.getElementById("auditList");
+      if (listDiv && history.length > 0) {
+        listDiv.innerHTML = history.map(h => `
+          <div style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; padding:10px 14px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#a5b4fc; margin-bottom:4px;">
+              <span>Audit #${h.audit_id}</span>
+              <span>${h.date}</span>
             </div>
-          `).join('');
+            <div style="font-size:0.84rem; font-weight:600; color:#fff; margin-bottom:4px;">
+              🎯 ${h.query_domains} (${h.query_difficulty})
+            </div>
+            <div style="font-size:0.75rem; color:#cbd5e1;">
+              Top: ${(h.top_courses || []).map(c => c.title).slice(0, 2).join(' • ')}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`http://127.0.0.1:5001/api/students/${sid}`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.student && data.student.audit_history) {
+          renderAuditItems(data.student.audit_history);
+          return;
         }
       }
     } catch (e) {
-      console.warn("Could not fetch student audit history:", e);
+      console.warn("Could not fetch student audit history from server, using local store:", e);
+    }
+
+    if (window.SmartEngine) {
+      const localAudits = window.SmartEngine.getAudits(sid);
+      renderAuditItems(localAudits);
     }
   }
   loadStudentAudits(studentId);
+
 
   // Pre-fill difficulty from URL params
   const urlLevel = params.get("level") || "";

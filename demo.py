@@ -8,13 +8,12 @@ def run_demo():
 
     rec = SmartCampusRecommender()
     
-    # Pick 4 diverse sample course IDs from different subjects
-    test_course_ids = [
-        rec.df[rec.df['subject'] == 'Web Development'].iloc[0]['course_id'],
-        rec.df[rec.df['subject'] == 'Graphic Design'].iloc[0]['course_id'],
-        rec.df[rec.df['subject'] == 'Business Finance'].iloc[0]['course_id'],
-        rec.df[rec.df['subject'] == 'Musical Instruments'].iloc[0]['course_id']
-    ]
+    # Pick 4 diverse sample course IDs from different disciplines
+    test_course_ids = []
+    for q in ['Web', 'Design', 'Finance', 'Intelligence|Data|Physics|Music']:
+        matched = rec.df[rec.df['subject'].str.contains(q, case=False, na=False)]
+        if not matched.empty:
+            test_course_ids.append(matched.iloc[0]['course_id'])
 
     for cid in test_course_ids:
         query_row = rec.df[rec.df['course_id'] == cid].iloc[0]

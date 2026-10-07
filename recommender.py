@@ -82,6 +82,8 @@ class SmartCampusRecommender:
             self.df['course_title'] = self.df['Name']
         if 'domain' not in self.df.columns and 'subject' in self.df.columns:
             self.df['domain'] = self.df['subject']
+        if 'subject' not in self.df.columns and 'domain' in self.df.columns:
+            self.df['subject'] = self.df['domain']
         if 'faculty' not in self.df.columns:
             self.df['faculty'] = "School of Computing & Engineering (B.Tech)"
         if 'institution' not in self.df.columns:
@@ -168,7 +170,9 @@ class SmartCampusRecommender:
                 enrolled = np.random.choice(pref_indices, size=num_enrollments, replace=False)
                 interaction_matrix[user_id, enrolled] = 1.0
 
+        self.user_course_matrix = pd.DataFrame(interaction_matrix)
         self.collaborative_similarity = cosine_similarity(interaction_matrix.T)
+        self.content_similarity = cosine_similarity(self.tfidf_matrix)
 
     def get_sbert_recommendations(self, profile_text, top_n=6):
         """Pure Deep Transformer (SBERT) Semantic Recommendation"""
@@ -371,3 +375,45 @@ class SmartCampusRecommender:
         results = self.df.iloc[top_indices].copy()
         results['final_score'] = calibrated[top_indices]
         return results
+
+    def get_content_recommendations(self, course_id, top_n=5):
+        """Content-based recommendations for a course ID based on TF-IDF cosine similarity."""
+        matches = self.df[self.df['course_id'] == course_id]
+        if matches.empty:
+            return pd.DataFrame()
+        idx = matches.index[0]
+        sim_scores = list(enumerate(self.content_similarity[idx]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        top_indices = [i for i, s in sim_scores if i != idx][:top_n]
+        res = self.df.iloc[top_indices].copy()
+        res['content_score'] = [self.content_similarity[idx][i] for i in top_indices]
+        return res
+
+    def get_collaborative_recommendations(self, course_id, top_n=5):
+        """Item-Item Collaborative Filtering recommendations based on co-enrollment similarity."""
+        matches = self.df[self.df['course_id'] == course_id]
+        if matches.empty:
+            return pd.DataFrame()
+        idx = matches.index[0]
+        sim_scores = list(enumerate(self.collaborative_similarity[idx]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        top_indices = [i for i, s in sim_scores if i != idx][:top_n]
+        res = self.df.iloc[top_indices].copy()
+        res['collab_score'] = [self.collaborative_similarity[idx][i] for i in top_indices]
+        return res
+
+    def get_hybrid_recommendations(self, course_id, alpha=0.5, top_n=5):
+        """Weighted hybrid fusion: Score = alpha * Content + (1 - alpha) * Collaborative."""
+        matches = self.df[self.df['course_id'] == course_id]
+        if matches.empty:
+            return pd.DataFrame()
+        idx = matches.index[0]
+        content_sim = self.content_similarity[idx]
+        collab_sim = self.collaborative_similarity[idx]
+        hybrid_sim = alpha * content_sim + (1 - alpha) * collab_sim
+        sim_scores = list(enumerate(hybrid_sim))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        top_indices = [i for i, s in sim_scores if i != idx][:top_n]
+        res = self.df.iloc[top_indices].copy()
+        res['hybrid_score'] = [hybrid_sim[i] for i in top_indices]
+        return res

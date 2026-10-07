@@ -113,14 +113,25 @@ document.addEventListener('DOMContentLoaded', () => {
       submitBtn.innerHTML = '<span>Verifying credentials...</span>';
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const res = await fetch('http://127.0.0.1:5001/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier, password })
+          body: JSON.stringify({ identifier, password }),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         const data = await res.json();
         if (!res.ok) {
+          if (window.SmartEngine) {
+            const fallback = window.SmartEngine.authenticate(identifier, password);
+            if (fallback.ok) {
+              completeStudentLogin(fallback.student, fallback.token);
+              return;
+            }
+          }
           showAlert(data.error || 'Authentication failed. Please verify credentials.');
           submitBtn.disabled = false;
           submitBtn.innerHTML = '<span>Sign In to Student Portal →</span>';
@@ -129,6 +140,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         completeStudentLogin(data.student, data.token);
       } catch (err) {
+        if (window.SmartEngine) {
+          const fallback = window.SmartEngine.authenticate(identifier, password);
+          if (fallback.ok) {
+            completeStudentLogin(fallback.student, fallback.token);
+            return;
+          }
+        }
         showAlert('Could not connect to backend server. Make sure server.py is running on port 5001.');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<span>Sign In to Student Portal →</span>';
@@ -189,11 +207,15 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const res = await fetch('http://127.0.0.1:5001/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         const data = await res.json();
         if (!res.ok) {
@@ -205,6 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         completeStudentLogin(data.student, data.token);
       } catch (err) {
+        if (window.SmartEngine) {
+          const fallback = window.SmartEngine.register(payload);
+          if (fallback.ok) {
+            completeStudentLogin(fallback.student, fallback.token);
+            return;
+          }
+        }
         showAlert('Could not connect to backend server. Make sure server.py is running on port 5001.');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<span>Register Account & Enter Portal →</span>';

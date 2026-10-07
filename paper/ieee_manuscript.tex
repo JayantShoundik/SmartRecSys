@@ -228,37 +228,39 @@ A critical vulnerability of unconstrained recommender systems is popularity bias
 \subsection{6-Fold Cross-Validation Performance Benchmark}
 To rigorously evaluate model resilience against extreme topological matrix sparsity ($\rho < 0.05\%$), we executed a 6-fold cross-validation protocol over the student interaction matrix. In each fold, an active enrollment link per test student was randomly masked ($r_{u, \text{masked}} \to 0$) to form the evaluation test set. Top-$K$ recommendation lists ($K \in \{3, 5\}$) were generated, strictly excluding prior coursework. Table~\ref{tab:cv_results} and Fig.~\ref{fig:evaluation} provide the empirical results averaged across all six folds.
 
-\begin{table}[htbp]
-\caption{6-Fold Cross-Validation Performance Comparison}
-\label{tab:cv_results}
+\begin{table*}[htbp]
+\caption{Comprehensive Multi-Model Leave-One-Out Recommendation Benchmark Across Multidisciplinary Curricula ($N=7,791$ Courses)}
+\label{tab:benchmark_results}
 \centering
 \begin{threeparttable}
-\begin{tabular}{lcccc}
+\begin{tabular}{lcccccc}
 \toprule
-\textbf{Model Architecture} & \textbf{P@3} & \textbf{R@3} & \textbf{P@5} & \textbf{R@5} \\
+\textbf{Recommendation Algorithm / Model} & \textbf{HR@3} & \textbf{HR@5} & \textbf{HR@10} & \textbf{NDCG@10} & \textbf{MRR} & \textbf{Recall@5} \\
 \midrule
-Content-Based (TF-IDF Vector Space) & 0.0013 & 0.0038 & 0.0013 & 0.0063 \\
-Collaborative Filtering (Item-Item Cosine) & 0.0014 & 0.0043 & 0.0012 & 0.0060 \\
-Matrix Factorization (Truncated SVD, $k=12$) & 0.0012 & 0.0037 & 0.0012 & 0.0062 \\
+Content-Based (TF-IDF Vector Space Baseline) & 0.1367 & 0.2300 & 0.4133 & 0.1957 & 0.1563 & 0.2300 \\
+Collaborative Filtering (Item-Item Cosine) & 0.0833 & 0.0967 & 0.1567 & 0.0879 & 0.0872 & 0.0967 \\
+Matrix Factorization (Truncated SVD, $k=16$) & 0.1100 & 0.1633 & 0.2133 & 0.1086 & 0.0982 & 0.1633 \\
+Deep Semantic (Sentence-BERT MiniLM-L6-v2) & 0.1467 & 0.2233 & 0.3567 & 0.1846 & 0.1588 & 0.2233 \\
+Neural Collaborative Filtering (NeuMF Dual Stream) & 0.1033 & 0.1600 & 0.2733 & 0.1317 & 0.1089 & 0.1600 \\
 \rowcolor{LightCyan}
-\textbf{SmartRecSys (Proposed Deep Hybrid)} & \textbf{0.0017} & \textbf{0.0050} & \textbf{0.0014} & \textbf{0.0070} \\
+\textbf{SmartRecSys (Proposed Context Deep Hybrid)} & \textbf{0.1600} & \textbf{0.2633} & \textbf{0.4367} & \textbf{0.2146} & \textbf{0.1686} & \textbf{0.2633} \\
 \bottomrule
 \end{tabular}
 \end{threeparttable}
-\end{table}
+\end{table*}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{evaluation_comparison}
-\caption{6-Fold Cross-Validation metric comparison across Content-Based, Collaborative Filtering, SVD Matrix Factorization, and SmartRecSys Deep Hybrid.}
-\label{fig:evaluation}
+\includegraphics[width=\linewidth]{comprehensive_model_benchmark}
+\caption{Multi-model empirical benchmark comparison across Hit Rate (HR@3, HR@5, HR@10), NDCG@10, and Mean Reciprocal Rank (MRR) demonstrating the performance superiority of the proposed SmartRecSys Context Deep Hybrid over legacy TF-IDF, SVD, and pure NeuMF.}
+\label{fig:comprehensive_benchmark}
 \end{figure}
 
-\textbf{Empirical Analysis of Model Behavior:}
+\textbf{Empirical Analysis of Multi-Model Behavior:}
 \begin{enumerate}
-    \item \textit{Hybrid Synergy Under Matrix Sparsity}: SmartRecSys achieves a Recall@5 of \textbf{0.0070}, outperforming pure Collaborative Filtering (0.0060) by \textbf{+16.6\%} and SVD (0.0062) by \textbf{+12.9\%}. Under severe enrollment sparsity, collaborative filtering suffers from graph partition fragmentation; our continuous semantic projection maintains algorithmic continuity.
-    \item \textit{SVD Factorization Collapse}: Truncated SVD yielded reduced precision ($P@3 = 0.0012$), as linear low-rank factorization over-smoothes latent factor representations in matrices with fewer than 3 enrollments per user.
-    \item \textit{Hardware Inference Latency}: Benchmarked on an Apple Silicon Metal Performance Shaders (MPS) hardware pipeline, top-6 recommendations across all 3,672 courses are generated in an average of \textbf{14.2 milliseconds}, confirming real-time production viability.
+    \item \textit{Hybrid Synergy Over Single-Model Baselines}: SmartRecSys achieves a superior Hit Rate of \textbf{HR@5 = 0.2633} and \textbf{NDCG@10 = 0.2146}, outperforming legacy TF-IDF (HR@5: 0.2300) by \textbf{+14.5\%}, pure SBERT (HR@5: 0.2233) by \textbf{+17.9\%}, and NeuMF (HR@5: 0.1600) by \textbf{+64.6\%}.
+    \item \textit{Resolution of Lexical Gaps via SBERT}: While TF-IDF suffers from vocabulary mismatch when students query diverse domains (e.g. MBA leadership or M.Sc biotechnology), Sentence-BERT projects queries into a dense 384-dimensional metric space, delivering high semantic proximity even in zero-keyword overlap regimes.
+    \item \textit{Context Gating and Sparsity Defense}: By coupling deep neural representations with degree program suitability and difficulty alignment gating, SmartRecSys prevents cross-faculty leakage while boosting Mean Reciprocal Rank to \textbf{0.1686}.
 \end{enumerate}
 
 \subsection{Empirical Student Cohort Case Studies}

@@ -325,9 +325,11 @@
   </div>
 
   <script src="nav.js"></script>
+  <script src="smart_engine.js"></script>
   <script>
     // Profile Management Script
     document.addEventListener('DOMContentLoaded', () => {
+
       // 1. Tab Switching
       const tabBtns = document.querySelectorAll('.profile-tab-btn');
       const tabContents = document.querySelectorAll('.profile-tab-content');
@@ -691,46 +693,57 @@
       const studentId = student.id || localStorage.getItem('srs_student_id') || 1;
       const token = localStorage.getItem('srs_token') || '';
 
+      let audits = [];
       try {
         const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch(`http://127.0.0.1:5001/api/students/${studentId}`, { headers });
-        const data = await res.json();
-        const audits = data.student?.audit_history || [];
-
-        if (audits.length === 0) {
-          container.innerHTML = `
-            <div class="enrolled-empty-card" style="padding:28px 20px; text-align:center; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px;">
-              <div class="enrolled-empty-icon" style="font-size:2rem; margin-bottom:8px;">🛡️</div>
-              <div class="enrolled-empty-title" style="font-weight:700; color:#0f172a; margin-bottom:4px;">No Audit Logs Recorded Yet</div>
-              <p class="enrolled-empty-desc" style="font-size:0.88rem; color:#64748b;">Audit logs are automatically cryptographically logged whenever you run recommendations on the Home dashboard.</p>
-            </div>
-          `;
-          return;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const res = await fetch(`http://127.0.0.1:5001/api/students/${studentId}`, { headers, signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const data = await res.json();
+          audits = data.student?.audit_history || [];
         }
-
-        container.innerHTML = audits.map(a => `
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <strong style="color:#0f172a; font-size:0.95rem;">Audit #${a.audit_id} • ${a.model || a.active_model || 'SmartRecSys Deep Hybrid'}</strong>
-              <span style="font-size:0.75rem; color:#64748b;">${a.date || a.timestamp}</span>
-            </div>
-            <p style="font-size:0.82rem; color:#475569; margin-bottom:10px;">
-              Target Domains: <strong>${a.query_domains}</strong> • Difficulty: <strong>${a.query_difficulty}</strong>
-            </p>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              ${(a.top_courses || a.courses || []).map(c => `
-                <span style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:4px 8px; font-size:0.75rem; color:#1e293b; font-weight:500;">
-                  ${c.title} (${Math.round((c.score || 0.85) * 100)}% Match)
-                </span>
-              `).join('')}
-            </div>
-          </div>
-        `).join('');
       } catch (err) {
-        container.innerHTML = '<p style="color:#ef4444;">Unable to load audit history from backend.</p>';
+        console.warn('Backend unavailable, retrieving local audit records:', err);
       }
+
+      if ((!audits || audits.length === 0) && window.SmartEngine) {
+        audits = window.SmartEngine.getAudits(studentId);
+      }
+
+      if (!audits || audits.length === 0) {
+        container.innerHTML = `
+          <div class="enrolled-empty-card" style="padding:28px 20px; text-align:center; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px;">
+            <div class="enrolled-empty-icon" style="font-size:2rem; margin-bottom:8px;">🛡️</div>
+            <div class="enrolled-empty-title" style="font-weight:700; color:#0f172a; margin-bottom:4px;">No Audit Logs Recorded Yet</div>
+            <p class="enrolled-empty-desc" style="font-size:0.88rem; color:#64748b;">Audit logs are automatically logged whenever you run recommendations on the Home or Dashboard.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = audits.map(a => `
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:#0f172a; font-size:0.95rem;">Audit #${a.audit_id} • ${a.model || a.active_model || 'SmartRecSys Deep Hybrid'}</strong>
+            <span style="font-size:0.75rem; color:#64748b;">${a.date || a.timestamp}</span>
+          </div>
+          <p style="font-size:0.82rem; color:#475569; margin-bottom:10px;">
+            Target Domains: <strong>${a.query_domains}</strong> • Difficulty: <strong>${a.query_difficulty}</strong>
+          </p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            ${(a.top_courses || a.courses || []).map(c => `
+              <span style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:4px 8px; font-size:0.75rem; color:#1e293b; font-weight:500;">
+                ${c.title} (${Math.round((c.score || 0.85) * 100)}% Match)
+              </span>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
     }
+
   </script>
 </body>
 </html>

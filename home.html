@@ -246,7 +246,9 @@
 
   <!-- Scripts -->
   <script src="nav.js"></script>
+  <script src="smart_engine.js"></script>
   <script>
+
     // ── Global State & Helper Functions ──────────────────────────────────────
     let activeStudent = null;
     let recommendedCourses = [];
@@ -546,34 +548,43 @@
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const res = await fetch('http://127.0.0.1:5001/recommend', {
           method: 'POST',
           headers: headers,
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         const data = await res.json();
         recommendedCourses = data.recommendations || [];
-
-        if (recommendedCourses.length === 0) {
-          container.innerHTML = `<p style="padding:20px; color:#64748b;">No recommendations returned. Please check your profile preferences.</p>`;
-          return;
-        }
-
-        // Set Top AI Match Score in Hero
-        const topScore = recommendedCourses[0]?.score || 0.96;
-        document.getElementById('statMatchScore').textContent = `${Math.round(topScore * 100)}%`;
-
-        renderRecommendationCards(recommendedCourses);
       } catch (err) {
-        console.warn('Backend connection failed, using offline fallback recommendations:', err);
-        container.innerHTML = `
-          <div style="padding:20px; color:#ef4444; background:#fef2f2; border-radius:12px; border:1px solid #fecaca; width:100%;">
-            Unable to connect to SmartRecSys server at http://127.0.0.1:5001. Please make sure server.py is running.
-          </div>
-        `;
+        console.warn('Backend unavailable, using client-side SmartEngine recommendations:', err);
+        if (window.SmartEngine) {
+          recommendedCourses = window.SmartEngine.recommend(student, payload.preferences, 8);
+        }
       }
+
+      if (!recommendedCourses || recommendedCourses.length === 0) {
+        if (window.SmartEngine) {
+          recommendedCourses = window.SmartEngine.recommend(student, payload.preferences, 8);
+        }
+      }
+
+      if (!recommendedCourses || recommendedCourses.length === 0) {
+        container.innerHTML = `<p style="padding:20px; color:#64748b;">No recommendations returned. Please check your profile preferences.</p>`;
+        return;
+      }
+
+      // Set Top AI Match Score in Hero
+      const topScore = recommendedCourses[0]?.score || 0.96;
+      document.getElementById('statMatchScore').textContent = `${Math.round(topScore * 100)}%`;
+
+      renderRecommendationCards(recommendedCourses);
     }
+
 
     function renderRecommendationCards(courses) {
       const container = document.getElementById('recomCardsRow');
@@ -639,63 +650,73 @@
         url += `&subject=${encodeURIComponent(subject)}`;
       }
 
+      let courses = [];
       try {
-        const res = await fetch(url);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await res.json();
-        const courses = data.courses || [];
+        courses = data.courses || [];
+      } catch (err) {
+        console.warn('Backend catalog unavailable, using client-side catalog:', err);
+      }
 
-        if (courses.length === 0) {
-          container.innerHTML = `<p style="padding:20px; color:#64748b;">No courses found under this track.</p>`;
-          return;
+      if (!courses || courses.length === 0) {
+        if (window.SmartEngine) {
+          courses = window.SmartEngine.getTrending(subject, 12);
         }
+      }
 
-        const enrolled = getEnrolledCourses();
+      if (!courses || courses.length === 0) {
+        container.innerHTML = `<p style="padding:20px; color:#64748b;">No courses found under this track.</p>`;
+        return;
+      }
 
-        container.innerHTML = courses.map((c) => {
-          const isEnrolled = enrolled.some(e => e.title.toLowerCase() === c.title.toLowerCase());
-          const thumbClass = getThumbClass(c.domain);
-          const encodedCourse = encodeURIComponent(JSON.stringify(c));
+      const enrolled = getEnrolledCourses();
+      container.innerHTML = courses.map((c) => {
+        const isEnrolled = enrolled.some(e => e.title.toLowerCase() === c.title.toLowerCase());
+        const thumbClass = getThumbClass(c.domain);
+        const encodedCourse = encodeURIComponent(JSON.stringify(c));
 
-          return `
-            <div class="hub-card">
-              <div class="hub-card-thumb ${thumbClass}">
-                <div class="hub-card-top-badges">
-                  <span class="hub-domain-badge" title="${c.domain}">${c.domain}</span>
-                  <span class="hub-match-pill" style="background:rgba(255,255,255,0.25); color:#fff; box-shadow:none;">★ ${c.rating || 4.7}</span>
-                </div>
-                <div class="hub-level-tag">
-                  <span>📖</span> ${c.difficulty || 'All Levels'}
-                </div>
+        return `
+          <div class="hub-card">
+            <div class="hub-card-thumb ${thumbClass}">
+              <div class="hub-card-top-badges">
+                <span class="hub-domain-badge" title="${c.domain}">${c.domain}</span>
+                <span class="hub-match-pill" style="background:rgba(255,255,255,0.25); color:#fff; box-shadow:none;">★ ${c.rating || 4.7}</span>
               </div>
-
-              <div class="hub-card-body">
-                <h4 class="hub-card-title" title="${c.title}">${c.title}</h4>
-                <p style="font-size:0.78rem; color:#64748b; line-height:1.4; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
-                  ${c.description || 'Comprehensive campus coursework.'}
-                </p>
-
-                <div class="hub-card-meta">
-                  <span>⏱️ ${c.duration || '6 Weeks'}</span>
-                  <span>👥 ${(c.subscribers || 1400).toLocaleString()} enrolled</span>
-                </div>
-
-                <div class="hub-card-actions">
-                  <button type="button" class="hub-enroll-btn ${isEnrolled ? 'enrolled' : ''}" 
-                          onclick="enrollInCourse('${encodedCourse}')" ${isEnrolled ? 'disabled' : ''}>
-                    ${isEnrolled ? '✓ Enrolled' : '+ Enroll'}
-                  </button>
-                  <button type="button" class="hub-preview-btn" onclick="previewCourseDirect('${encodedCourse}')">
-                    Details
-                  </button>
-                </div>
+              <div class="hub-level-tag">
+                <span>📖</span> ${c.difficulty || 'All Levels'}
               </div>
             </div>
-          `;
-        }).join('');
-      } catch (err) {
-        container.innerHTML = `<p style="padding:20px; color:#ef4444;">Unable to load catalog courses.</p>`;
-      }
+
+            <div class="hub-card-body">
+              <h4 class="hub-card-title" title="${c.title}">${c.title}</h4>
+              <p style="font-size:0.78rem; color:#64748b; line-height:1.4; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                ${c.description || 'Comprehensive campus coursework.'}
+              </p>
+
+              <div class="hub-card-meta">
+                <span>⏱️ ${c.duration || '6 Weeks'}</span>
+                <span>👥 ${(c.subscribers || 1400).toLocaleString()} enrolled</span>
+              </div>
+
+              <div class="hub-card-actions">
+                <button type="button" class="hub-enroll-btn ${isEnrolled ? 'enrolled' : ''}" 
+                        onclick="enrollInCourse('${encodedCourse}')" ${isEnrolled ? 'disabled' : ''}>
+                  ${isEnrolled ? '✓ Enrolled' : '+ Enroll'}
+                </button>
+                <button type="button" class="hub-preview-btn" onclick="previewCourseDirect('${encodedCourse}')">
+                  Details
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
+
 
     function setupCatalogFilterTabs() {
       const tabs = document.querySelectorAll('#catalogFilterTabs .hub-filter-tab');
