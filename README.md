@@ -1,144 +1,260 @@
-# SmartRecSys: An Intelligent Hybrid Recommender System for Personalized E-Learning in Smart Campus Environments Addressing the Cold-Start Problem
+# 🎓 SmartRecSys: Intelligent Hybrid Recommendation System for Smart Campus E-Learning
 
-Welcome to the **SmartRecSys** repository, a foundational workspace for our major engineering project. This repository aggregates key international literature from **IEEE** and **Elsevier** to guide the architectural design, algorithmic choices, and evaluation methodologies of our smart campus recommendation platform.
+[![GitHub Pages Deployment](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen?logo=github&style=for-the-badge)](https://jayantshoundik.github.io/SmartRecSys/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&style=for-the-badge)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-Metal%20MPS%20%7C%20CUDA-ee4c2c?logo=pytorch&style=for-the-badge)](https://pytorch.org/)
+[![Flask](https://img.shields.io/badge/Backend-Flask%20REST%20API-black?logo=flask&style=for-the-badge)](https://flask.palletsprojects.com/)
+[![License](https://img.shields.io/badge/Academic-Final%20Year%20Major%20Project-blueviolet?style=for-the-badge)](#)
+
+> **4th-Year Engineering Major Project**  
+> **Official Title**: *SmartRecSys: An Intelligent Hybrid Recommendation System for Personalized E-Learning in Smart Campus Environments Addressing the Cold-Start Problem and Data Sparsity*  
+> **Live Web Application**: [https://jayantshoundik.github.io/SmartRecSys/](https://jayantshoundik.github.io/SmartRecSys/)  
+> **Source Repository**: [https://github.com/JayantShoundik/SmartRecSys](https://github.com/JayantShoundik/SmartRecSys)
 
 ---
 
-## 📖 Executive Summary & Context
+## 📌 Executive Summary
 
-Personalized e-learning is a core pillar of modern digital transformation in higher education. With the development of smart campuses, educational institutions collect massive amounts of user behavior and educational content data. Traditional recommender systems fail to address the specific pedagogical and technical constraints of this environment. 
+Higher education institutions face fundamental challenges when guiding undergraduate and postgraduate students through modular e-learning catalogs. In typical campus portals, interaction density is under **$0.05\%$**, creating extreme matrix sparsity where traditional collaborative filtering collapses. Simultaneously, new students encounter the **freshman cold-start dilemma**, receiving arbitrary courses or popularity-biased suggestions that ignore degree prerequisites and career goals.
 
-**SmartRecSys** aims to extend our previous research (*EduRecSys*) by integrating multi-modal contextual parameters, student cognitive profiles, and semantic course metadata. The objective is to build an adaptive recommendation engine that solves the cold-start problem, resolves data sparsity, and operates at scale in a smart campus ecosystem.
+**SmartRecSys** solves these bottlenecks with an intelligent multi-objective hybrid recommendation architecture. It synergistically integrates:
+1. **Deep Semantic Representations** via Sentence-BERT (`all-MiniLM-L6-v2`) in a 384-dimensional metric space.
+2. **Deep Neural Collaborative Filtering (NeuMF)** using dual Generalized Matrix Factorization (GMF) and multi-layer perceptron (MLP) streams.
+3. **Linear Low-Rank Factorization** via Truncated Singular Value Decomposition (SVD, $k=16$).
+4. **Contextual Pedagogical Gating** including degree program alignment, cognitive difficulty calibration, prerequisite checking, and domain affinity masking.
+5. **Explainable AI (XAI)** delivering transparent *"Why recommended"* justifications and printable academic advisory dossiers.
+6. **Dual-Mode Deployment**: Operates with a GPU/MPS-accelerated Python Flask backend locally or as a zero-dependency static web application hosted on **GitHub Pages** powered by `smart_engine.js`.
 
 ---
 
-## 🔍 Reference Paper Analysis
+## 🏆 Comprehensive Multi-Model Benchmark ($N=7,791$ Courses)
 
-This project directly leverages the methodology, findings, and dataset modeling presented in the reference paper:
-> **Paper Title:** *An Intelligent Hybrid Recommendation System for E-Learning Personalization in Smart Campus*  
-> **Author:** Manar Joundy Hazar (2025)  
-> **Journal:** International Journal of Scientific Research in Science and Technology (Volume 12, Issue 5)
+The recommendation engine was benchmarked across **7,791 multidisciplinary courses** and **25,000+ student interaction profiles** across 5 academic faculties under a rigorous **Leave-One-Out Evaluation Protocol** (with 99 negative candidates per test student).
 
-The reference paper outlines three core challenges in contemporary academic recommendation systems and implements a hybrid content-collaborative model designed for smart educational environments.
+### 📈 Empirical Metric Leaderboard (`benchmark_results.json`)
 
-### 1. The Three Core Problems of Educational Recommenders
+| Recommendation Algorithm / Model | Hit Rate (HR@3) | Hit Rate (HR@5) | Hit Rate (HR@10) | NDCG@10 | Mean Reciprocal Rank (MRR) | Recall@5 | Precision@5 |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Collaborative Filtering (Item-Item Cosine)** | 0.0833 | 0.0967 | 0.1567 | 0.0879 | 0.0872 | 0.0967 | 0.0193 |
+| **Neural Collaborative Filtering (NeuMF)** | 0.1033 | 0.1600 | 0.2733 | 0.1317 | 0.1089 | 0.1600 | 0.0320 |
+| **Matrix Factorization (Truncated SVD, $k=16$)** | 0.1100 | 0.1633 | 0.2133 | 0.1086 | 0.0982 | 0.1633 | 0.0327 |
+| **Content-Based (TF-IDF Vector Space)** | 0.1367 | 0.2300 | 0.4133 | 0.1957 | 0.1563 | 0.2300 | 0.0460 |
+| **Deep Semantic (Sentence-BERT MiniLM-L6-v2)** | 0.1467 | 0.2233 | 0.3567 | 0.1846 | 0.1588 | 0.2233 | 0.0447 |
+| **⭐ SmartRecSys (Context Deep Hybrid)** | **0.1600** | **0.2633** | **0.4367** | **0.2146** | **0.1686** | **0.2633** | **0.0527** |
 
-*   **Cold-Start Problem:** Recommender systems struggle when a new user joins the platform (user cold-start) or when a new course is added (item cold-start) due to the complete lack of interaction records. The reference paper addresses this by utilizing content-based text representations (TF-IDF vectors of course titles, levels, and subjects) to compute semantic similarities, allowing course recommendations even when zero behavioral data is available.
-*   **Data Sparsity:** In a smart campus with thousands of courses and diverse learners, the user-item interaction matrix is extremely sparse (most cells are zero). Collaborative filtering algorithms fail to find meaningful user or item neighbors when overlap is minimal. Combining behavioral similarity with content similarity mitigates the impact of matrix sparsity.
-*   **Lack of Contextual Adaptability:** Standard filtering approaches treat learner preferences statically. They fail to adapt to dynamic, real-time campus variables (e.g., student cognitive progression, current semester workload, learning path constraints, and device utilization). The reference paper advocates for context-sensitive hybrid filtering that evolves with the learner's feedback loop.
+![Comprehensive Model Benchmark](plots/comprehensive_model_benchmark.png)
 
-### 2. Smart Campus Implementation Methodology
+### 📊 Benchmark Key Insights
+* **Hybrid Superiority**: SmartRecSys achieves **$\text{HR@5} = 0.2633$** and **$\text{NDCG@10} = 0.2146$**, outperforming TF-IDF by **$+14.5\%$**, pure SBERT by **$+17.9\%$**, NeuMF by **$+64.6\%$**, and pure Item-Item Collaborative Filtering by **$+172.3\%$**.
+* **Lexical Gap Resolution**: While TF-IDF suffers from lexical vocabulary mismatch when students query diverse disciplines, Sentence-BERT projects queries into a dense 384-dimensional continuous metric space, preserving high semantic proximity even in zero-keyword overlap conditions.
+* **Cold-Start Elimination**: For incoming freshmen with zero interaction history ($r_u = \mathbf{0}$), SmartRecSys delivers **$79.26\% - 88.73\%$** top match scores on Day 1 by leveraging intake metadata.
+* **Inference Latency**: Benchmarked on Apple Silicon Metal Performance Shaders (MPS), recommendation ranking over all 7,791 courses completes in **$14.2\text{ ms}$**, well below the $100\text{ ms}$ threshold for real-time web interactivity.
 
-The reference paper proposes a hybrid course recommendation pipeline validated through a simulated smart campus environment:
+---
+
+## 🏛️ Multidisciplinary University Catalog ($N=7,791$)
+
+The campus course catalog (`dataset/comprehensive_campus_courses.csv`) spans **5 distinct academic faculties**:
+
+```
++-----------------------------------------------------------------------------------------+
+| FACULTY CURRICULUM DISTRIBUTION (N = 7,791 Courses)                                     |
++----------------------------------------------------+------------+-----------------------+
+| Academic Faculty / School                          | Courses N  | Primary Domains       |
++----------------------------------------------------+------------+-----------------------+
+| School of Computing & Engineering (B.Tech)         | 3,041      | AI, Software, Cloud   |
+| School of Business & Management (MBA)              | 2,392      | Finance, Strategy     |
+| School of Humanities & Social Sciences             | 1,254      | Psychology, Economics |
+| School of Design & Creative Arts                   | 628        | UI/UX, Game Media     |
+| School of Natural Sciences & Mathematics (M.Sc)    | 476        | Physics, Calculus     |
++----------------------------------------------------+------------+-----------------------+
+| TOTAL CAMPUS CURRICULAR OFFERINGS                  | 7,791      | 100.0%                |
++----------------------------------------------------+------------+-----------------------+
+```
+
+---
+
+## 🏗️ System Architecture & Workflow
 
 ```mermaid
 graph TD
-    A[Udemy Kaggle Dataset: 3,683 Courses] --> B[Text Preprocessing & Title Cleaning]
-    B --> C[Create 'Full-Text' Feature: Title + Subject + Level]
-    C --> D[TF-IDF Vectorization]
+    A[Student Academic Profile Intake: Degree, Semester, Domains, Level, Prerequisites, Career Goal] --> B[Dual-Stream Representation Engine]
     
-    E[1,000 Synthetic User Profiles] --> F[Binary User-Course Interaction Matrix]
-    F --> G[Item-Item Collaborative Cosine Similarity]
+    B --> C[Stream 1: Sentence-BERT 384-d Dense Semantic Embeddings]
+    B --> D[Stream 2: NeuMF Dual-Stream GMF + MLP Collaborative Interactions]
+    B --> E[Stream 3: TF-IDF Sublinear Keyword Vector Space]
+    B --> F[Stream 4: Truncated SVD Latent Decomposition]
     
-    D --> H[Content Similarity Score]
-    G --> I[Collaborative Filtering Score]
+    C --> G[Contextual Pedagogical Gating Engine]
+    D --> G
+    E --> G
+    F --> G
     
-    H --> J[Weighted Hybrid Scoring Function]
-    I --> J
+    G --> H[Degree Program Suitability Check: Prevent Inter-Faculty Leakage]
+    G --> I[Cognitive Difficulty Calibration: Delta L_target vs L_course]
+    G --> J[Prerequisite Chaining: Suppress Already Completed Courses]
     
-    J --> K[Tunable Parameter α Fusion]
-    K --> L[Top-K Course Recommendations]
+    H --> K[Calibrated Master Hybrid Fusion Score 0.65 - 0.98]
+    I --> K
+    J --> K
     
-    L --> M[Explainable AI XAI & Evaluation]
+    K --> L[Explainable AI XAI Attribution Module]
+    L --> M[Personalized Learning Hub & Ranked Top Matches]
+    L --> N[One-Click Printable Academic Advisory Dossier PDF]
+    L --> O[Tamper-Evident SQLite Audit Log Engine]
 ```
 
-*   **Dataset Modeling:** Utilizes a dataset of 3,683 Udemy courses from Kaggle, containing attributes such as difficulty levels (*Beginner*, *Intermediate*, *Expert*, *All Levels*) and subjects (*Business Finance*, *Web Development*, *Graphic Design*, *Musical Instruments*).
-*   **Simulation of Campus Learners:** Emulates real-world campus interactions by generating 1,000 synthetic student profiles. Each profile is assigned a preferred subject and a history of 3 to 10 course enrollments, building a binary user-course interaction matrix.
-*   **Algorithmic Fusion:** 
-    *   **Content Score:** Text preprocessing (lowercasing, punctuation/stopword removal) on course titles, subjects, and levels is converted to a vector space via TF-IDF vectorization. Cosine similarity is computed between courses.
-    *   **Collaborative Score:** Computes item-item similarity based on co-enrollment patterns across the simulated user base using Cosine Similarity on the transposed user-course matrix.
-    *   **Hybrid Integration:** Fuses content-based ($Score_{\text{content}}$) and collaborative ($Score_{\text{collaborative}}$) scores through a weighted normalization scheme:
-        $$\text{Score}_{\text{hybrid}} = \alpha \cdot \text{Score}_{\text{content}} + (1 - \alpha) \cdot \text{Score}_{\text{collaborative}}$$
-        where $\alpha \in [0, 1]$ is a tunable parameter.
-*   **Empirical 6-Fold Cross-Validation Evaluation ($K \in \{3, 5\}$):** Rigorous leave-one-out cross-validation was conducted across 3,672 curricular courses under extreme topological matrix sparsity (>99.8%). Fusing semantic and behavioral signals resulted in:
+---
 
-| Algorithm Architecture | Precision@3 | Recall@3 | Precision@5 | Recall@5 | Gain vs CF Baseline |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Content-Based (TF-IDF)** | $0.0013$ | $0.0038$ | $0.0013$ | $0.0063$ | Baseline |
-| **Collaborative Filtering (Cosine)** | $0.0014$ | $0.0043$ | $0.0012$ | $0.0060$ | $+13.1\%$ |
-| **Matrix Factorization (SVD, $k=12$)** | $0.0012$ | $0.0037$ | $0.0012$ | $0.0062$ | $-13.9\%$ |
-| **SmartRecSys (Deep Hybrid)** | **$0.0017$** | **$0.0050$** | **$0.0014$** | **$0.0070$** | **$+16.6\%$** |
+## 💻 Full-Stack Platform Features
 
-> **Note on Evaluation Metrics:** In a catalog of 3,672 items where exactly 1 ground-truth course is masked per test link, random recommendation yields $P@3 \approx 0.00081$. SmartRecSys achieves **$0.0017$** (more than $2.1\times$ higher than random chance) and **Recall@5 of $0.0070$**, representing an empirical improvement of $+16.6\%$ over collaborative filtering without data leakage.
+| Web Page | Path | Key Functionality |
+| :--- | :--- | :--- |
+| **Welcome Portal** | [`welcome.html`](welcome.html) | Modern landing page, platform overview, core benefits, and call-to-action |
+| **Learning Hub** | [`home.html`](home.html) | Active student schedule, dynamic course enrollment/drop tracker, trending catalog tabs, and top match badges |
+| **Recommendation Dashboard** | [`dashboard.html`](dashboard.html) | Ranked course cards, dynamic match percentage rings ($0-100\%$), domain/difficulty filters, audit drawer, and advisory report modal |
+| **Academic Profile** | [`profile.html`](profile.html) | Degree and semester settings, selectable domain interest pills, 1-click student presets, and SQLite audit log history |
+| **Student Auth Portal** | [`login.html`](login.html) | Student login & registration, password security, and **⚡ 1-Click Evaluation Accounts** for instant grading |
+| **Documentation Manual** | [`docs.html`](docs.html) | Complete mathematical formulations, architecture diagrams, and REST API specification |
+
+### ⚡ 1-Click Demo Evaluation Accounts
+Available directly on [`login.html`](login.html) without entering manual passwords:
+* **Devansh Sharma** (`devansh@campus.edu`): CS • Semester 3 • Cloud Security Track
+* **Ujjwal Kishore Singh** (`ujjwal@campus.edu`): CS • Semester 5 • Cybersecurity & AI Track
+* **Anya Roy** (`anya.roy@campus.edu`): CS • Semester 7 • Machine Learning Research Track
+* **Aarav Sharma** (`aarav@campus.edu`): CS • Semester 5 • Machine Learning Engineering Track
+* **Priya Patel** (`priya@campus.edu`): IT • Semester 1 • **Freshman Cold-Start Simulation**
+* **Rohan Verma** (`rohan.verma@campus.edu`): ECE • Semester 4 • Full Stack Web Systems Track
 
 ---
 
-## 📚 Bibliography of Downloaded Research Papers
+## 🚀 Deployment & Quick Start Guide
 
-We have downloaded **20 high-quality, peer-reviewed international research papers** (10 from **IEEE** and 10 from **ELSEVIER**) to support our literature review.
+### Option A: Live GitHub Pages (Instant Access, Zero Setup)
+Open the deployed application directly in any modern browser:
+👉 **[https://jayantshoundik.github.io/SmartRecSys/](https://jayantshoundik.github.io/SmartRecSys/)**
 
-### 📂 IEEE Folder (10 Papers)
-1.  **[A Recommender System For Open Educational Videos Based On Skill Requirements](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/A_Recommender_System_For_Open_Educational_Videos_Based_On_Skill_Requirements.pdf)**
-    *   *Abstract:* Connects open educational video suggestions directly to real-world job market skill requirements using job posting analysis.
-2.  **[A Survey on Federated Recommendation Systems](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/A_Survey_on_Federated_Recommendation_Systems.pdf)**
-    *   *Abstract:* Reviews decentralized collaborative filtering methodologies that preserve learner privacy under smart campus structures.
-3.  **[BPL: Bias-adaptive Preference Distillation Learning for Recommender System](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/BPL_Bias-adaptive_Preference_Distillation_Learning_for_Recommender_System.pdf)**
-    *   *Abstract:* Addresses feedback bias in user matrices to distill clean user preferences, enhancing prediction accuracy.
-4.  **[Causal Incremental Graph Convolution for Recommender System Retraining](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/Causal_Incremental_Graph_Convolution_for_Recommender_System_Retraining.pdf)**
-    *   *Abstract:* Introduces dynamic graph updating to incorporate new user interactions without retraining the model from scratch.
-5.  **[Exploring Customer Price Preference and Product Profit Role in Recommender Systems](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/Exploring_Customer_Price_Preference_and_Product_Profit_Role_in_Recommender_Syste.pdf)**
-    *   *Abstract:* Analyzes the balance between user preference constraints and platform/provider objectives in recommendation engines.
-6.  **[Influential Recommender System](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/Influential_Recommender_System.pdf)**
-    *   *Abstract:* Explores peer-influence networks to simulate social interactions and information diffusion in recommender systems.
-7.  **[Intent-Aware Contextual Recommendation System](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/Intent-Aware_Contextual_Recommendation_System.pdf)**
-    *   *Abstract:* Models changing user intent and context dynamically, helping recommenders adapt to real-time session inputs.
-8.  **[Movie Recommender System using critic consensus](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/Movie_Recommender_System_using_critic_consensus.pdf)**
-    *   *Abstract:* Explores consensus-driven aggregation techniques to address high sparsity and cold-start scenarios.
-9.  **[Quantitative analysis of Matthew effect and sparsity problem of recommender systems](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/Quantitative_analysis_of_Matthew_effect_and_sparsity_problem_of_recommender_syst.pdf)**
-    *   *Abstract:* Examines the "rich get richer" popularity bias (Matthew effect) in recommender platforms and models methods to combat sparsity.
-10. **[Real-Time Learning from An Expert in Deep Recommendation Systems with Marginal Data](file:///Users/jayantshoundik/Desktop/Major%20Project/IEEE/Real-Time_Learning_from_An_Expert_in_Deep_Recommendation_Systems_with_Marginal_D.pdf)**
-    *   *Abstract:* Integrates reinforcement learning and expert guidance (teacher-student models) to accelerate system convergence when interaction data is sparse.
+* Powered by `smart_engine.js` with client-side offline hybrid recommendation matching.
+* Full support for login, student profile edits, recommendation ranking, course enrollment/drop, and audit reports.
 
 ---
 
-### 📂 ELSEVIER Folder (10 Papers)
-1.  **[De-centering the Traditional User: Multistakeholder Evaluation of Recommender Systems](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/De-centering_the_Traditional_User_Multistakeholder_Evaluation_of_Recommender_Sys.pdf)**
-    *   *Abstract:* Proposes a multi-stakeholder assessment framework that evaluates recommendations from the perspective of students, professors, and administrative planners.
-2.  **[Federated Recommender System with Data Valuation for E-commerce Platform](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/Federated_Recommender_System_with_Data_Valuation_for_E-commerce_Platform.pdf)**
-    *   *Abstract:* Formulates data valuation metrics for secure, distributed recommender networks.
-3.  **[GHRS: Graph-based Hybrid Recommendation System with Application to Movie Recommendations](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/GHRS_Graph-based_Hybrid_Recommendation_System_with_Application_to_Movie_Recommen.pdf)**
-    *   *Abstract:* Details graph-based representations of hybrid systems, showcasing how content nodes and user nodes link in a graph neural network.
-4.  **[Ready for Emerging Threats to Recommender Systems: A Graph Convolution-based Generator](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/Ready_for_Emerging_Threats_to_Recommender_Systems_A_Graph_Convolution-based_Gene.pdf)**
-    *   *Abstract:* Explores adversarial resilience in graph recommender systems, protecting course databases from recommendation poisoning attacks.
-5.  **[Deep Latent Factor Model for Collaborative Filtering](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/Deep_Latent_Factor_Model_for_Collaborative_Filtering.pdf)**
-    *   *Abstract:* Implements neural network architectures to project sparse user-item interaction histories into deep latent factor representations.
-6.  **[A Hybrid Recommender System for Recommending Smartphones to Prospective Customers](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/A_Hybrid_Recommender_System_for_Recommending_Smartphones_to_Prospective_Customer.pdf)**
-    *   *Abstract:* Demonstrates practical hybrid recommendation utilizing feature matching and user demographics.
-7.  **[A blockchain-based intelligent recommender system framework for enhancing supply chain](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/A_blockchain-based_intelligent_recommender_system_framework_for_enhancing_supply.pdf)**
-    *   *Abstract:* Evaluates decentralized data sharing trust frameworks, applicable to verified skill credentialing in campus education.
-8.  **[Use of recommendation models to provide support to dyslexic students](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/Use_of_recommendation_models_to_provide_support_to_dyslexic_students.pdf)**
-    *   *Abstract:* Outlines adaptive content selection for learners with special educational needs (dyslexia), highlighting accessibility modeling.
-9.  **[Model-agnostic post-hoc explainability for recommender systems](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/Model-agnostic_post-hoc_explainability_for_recommender_systems.pdf)**
-    *   *Abstract:* Proposes architectures to generate post-hoc explanations for recommendations, critical for transparent, pedagogical e-learning guidance.
-10. **[Using consumer feedback from location-based services in PoI recommender systems](file:///Users/jayantshoundik/Desktop/Major%20Project/ELSEVIER/Using_consumer_feedback_from_location-based_services_in_PoI_recommender_systems_.pdf)**
-    *   *Abstract:* Utilizes spatial-temporal feedback, providing design cues for location-aware recommendation in physical smart campuses.
+### Option B: Local Full-Stack Setup (Metal MPS / CUDA Accelerated)
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/JayantShoundik/SmartRecSys.git
+cd SmartRecSys
+```
+
+#### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+# Or manual install:
+pip install torch torchvision sentence-transformers scikit-learn pandas numpy matplotlib seaborn flask flask-cors sqlalchemy
+```
+
+#### 3. Run Exploratory Data Analysis & Model Training
+```bash
+# Generate EDA distribution plots
+python3 eda.py
+
+# Run multi-model benchmark evaluation (LOO protocol on 7,791 courses)
+python3 benchmark_all_models.py
+
+# Run 6-fold cross-validation
+python3 evaluate_ml.py
+
+# Run interactive CLI recommendation demo
+python3 demo.py
+```
+
+#### 4. Launch the Backend REST API Server
+```bash
+python3 server.py
+# Backend API active at http://127.0.0.1:5001
+```
+
+#### 5. Launch the Frontend
+```bash
+python3 -m http.server 8000
+# Open http://localhost:8000 in your browser
+```
 
 ---
 
-## 🛠️ Setup & Git Usage
+## 📡 REST API Reference (`server.py`)
 
-This repository is initialized with local tracking. To link it to your GitHub account and push the current set of papers and documentation:
+### `POST /recommend`
+Computes personalized recommendations for a student profile.
 
-1.  **Initialize Git (Done locally):**
-    ```bash
-    git init
-    git add .
-    git commit -m "feat: initial commit with IEEE and Elsevier research directories and project README"
-    ```
-2.  **Link to GitHub:**
-    Create a new repository on your GitHub account, then execute:
-    ```bash
-    git remote add origin <your-github-repo-url>
-    git branch -M main
-    git push -u origin main
-    ```
+**Request:**
+```json
+{
+  "user_id": 42,
+  "preferences": {
+    "dept": "Computer Science & Engineering",
+    "degree": "B.Tech (4-Year)",
+    "semester": 5,
+    "domains": ["Artificial Intelligence & Data Science", "Web Development & Software Eng"],
+    "difficulty": "Intermediate",
+    "career_goal": "Machine Learning Engineer",
+    "completed_courses": "Data Structures, Discrete Mathematics"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "student_id": 42,
+  "active_model": "SmartRecSys Context Deep Hybrid (SBERT + NeuMF + MPS)",
+  "recommendations": [
+    {
+      "rank": 1,
+      "course_id": "COURSERA_4821",
+      "title": "Deep Learning Specialization",
+      "domain": "Artificial Intelligence & Data Science",
+      "difficulty": "Intermediate",
+      "score": 0.965,
+      "duration": "12 Weeks",
+      "institution": "DeepLearning.AI",
+      "reason": "Recommended for your Computer Science & Engineering curriculum to advance core machine learning engineering competencies toward Machine Learning Engineer."
+    }
+  ]
+}
+```
+
+---
+
+## 📚 Theoretical Foundation & Literature Synthesis
+
+This project is grounded in **20 international peer-reviewed papers** from **IEEE** and **Elsevier**:
+
+1. **Primary Reference Paper**:
+   * *An Intelligent Hybrid Recommendation System for E-Learning Personalization in Smart Campus* — Manar Joundy Hazar (2025). IJSRST.
+2. **IEEE Folder (10 Papers)**:
+   * Neural Collaborative Filtering, Federated Recommendation Systems, Bias Distillation Learning, Intent-Aware Contextual Recommendation, Causal Retraining Graph Convolutions, and Sparsity / Matthew Effect Analysis.
+3. **Elsevier Folder (10 Papers)**:
+   * Deep Latent Factor Models, Post-Hoc Model-Agnostic Explainability (XAI), Graph-Based Hybrid Recommendations (GHRS), and Multi-Stakeholder Academic Evaluation.
+
+Complete manuscripts and literature synthesis are available in:
+* [`docs/MAJOR_PROJECT_REPORT.md`](docs/MAJOR_PROJECT_REPORT.md)
+* [`paper/IEEE_RESEARCH_PAPER.md`](paper/IEEE_RESEARCH_PAPER.md)
+* [`paper/ieee_manuscript.tex`](paper/ieee_manuscript.tex)
+
+---
+
+## 👥 Engineering Team & Credits
+
+| Contributor | Focus Area |
+| :--- | :--- |
+| **Jayant Shoundik** | Project Lead, System Architecture, Deep Learning Pipeline & Backend REST API |
+| **Bhaskar** | Data Pipeline, Multi-Domain Curriculum Scraping & Database Modeling |
+| **Ujjwal Kishore Singh** | Model Benchmarking, NeuMF Optimization & Cross-Validation Analysis |
+| **Devansh Sharma** | Frontend UI/UX, Dynamic Cards, Advisory Dossier & GitHub Pages Deployment |
+
+---
+
+## 📄 License
+This project is developed as an academic Major Project for the Bachelor of Technology (B.Tech) degree in Computer Science and Engineering. All code and documentation are released under the **MIT License**.
